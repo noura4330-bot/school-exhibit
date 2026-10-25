@@ -48,7 +48,7 @@ const fields: FieldDef[] = [
   { key: 'reviewStatus', label: 'حالة المراجعة', type: 'select', options: reviewStatuses, required: true },
   { key: 'sensitivity', label: 'مستوى حساسية المعلومات', type: 'select', options: sensitivityLevels, required: true },
   { key: 'h2', label: 'الملف أو الرابط', type: 'heading' },
-  { key: 'files', label: 'رفع ملف', type: 'attachments', hint: cloudEnabled ? 'يُحفظ الملف في التخزين الخاص للمعرض، ويظهر للمصرّح لهم فقط.' : 'يُحفظ الملف في متصفح هذا الجهاز فقط، وقد لا يكون متاحًا على الأجهزة الأخرى.' },
+  { key: 'files', label: 'رفع ملف', type: 'attachments', hint: cloudEnabled ? 'يُحفظ الملف في قاعدة البيانات المركزية، ويظهر لكل زوار الموقع.' : 'يُحفظ الملف في متصفح هذا الجهاز فقط، وقد لا يكون متاحًا على الأجهزة الأخرى.' },
   { key: 'url', label: 'رابط الملف أو مساره', type: 'url', full: true, hint: 'مثل رابط OneDrive أو SharePoint. تأكدي أن صلاحية الرابط ليست عامة إن كان المحتوى داخليًا.' },
   { key: 'h3', label: 'ماذا يثبت هذا الشاهد؟', type: 'heading' },
   { key: 'proves', label: 'ما الذي يثبته الشاهد؟', type: 'textarea', rows: 2 },
@@ -295,7 +295,7 @@ function EvidenceView({
               </div>
               <AttachmentList items={e.files} />
               <p className="caption" style={{ marginTop: 4 }}>
-                {cloudEnabled ? 'الملفات محفوظة في التخزين الخاص للمعرض.' : 'الملفات محفوظة في متصفح هذا الجهاز فقط.'}
+                {cloudEnabled ? 'الملفات محفوظة في قاعدة البيانات المركزية، وتظهر لكل زوار الموقع.' : 'الملفات محفوظة في متصفح هذا الجهاز فقط.'}
               </p>
             </>
           )}
@@ -417,7 +417,7 @@ export default function EvidencePage({ focusId }: { focusId: string }) {
       />
       <Message tone="info">
         {cloudEnabled
-          ? 'الشواهد والملفات تُحفظ في قاعدة البيانات المركزية وتظهر للمصرّح لهم فقط. صدّري نسخة احتياطية دورية من الإعدادات.'
+          ? 'الشواهد والملفات تُحفظ في قاعدة البيانات المركزية وتظهر لكل زوار الموقع، فلا تُرفع ملفات فيها بيانات شخصية دون موافقة. صدّري نسخة احتياطية دورية من الإعدادات.'
           : 'الشواهد والملفات تُحفظ في متصفح هذا الجهاز فقط. للمشاركة استخدمي روابط OneDrive أو SharePoint، وصدّري نسخة احتياطية بانتظام.'}
       </Message>
 

@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { ArrowDownloadRegular, ArrowUploadRegular, SignOutRegular } from '@fluentui/react-icons'
-import { canEditRole, canReadRole, must, roleLabels, sb, toCloudError, type Role } from '../lib/cloud'
+import { canEditRole, must, sb, toCloudError, type Role } from '../lib/cloud'
 import { cloudPutRawFile } from '../lib/cloudFiles'
 import { localFiles } from '../lib/fileStore'
 import { backupFiles, buildBackup, parseBackup, type ExportFile } from '../lib/backup'
@@ -24,8 +24,11 @@ export interface CloudUser {
   role: Role
 }
 interface CloudValue {
-  user: CloudUser
+  /** null: زائر يشاهد دون تسجيل دخول */
+  user: CloudUser | null
   signOut: () => Promise<void>
+  /** يفتح شاشة الدخول (لمديرة النظام) */
+  signIn: () => void
 }
 const CloudContext = createContext<CloudValue | null>(null)
 /** المستخدم الحالي في الحفظ المركزي، أو null في الحفظ المحلي */
@@ -33,47 +36,44 @@ export const useCloud = () => useContext(CloudContext)
 
 const client = () => sb!
 
+// المشاهدة للجميع دون تسجيل دخول (قرار مديرة النظام 2026-10-25)، والتعديل لمن يملك الدور فقط.
 type Phase =
   | { kind: 'loading'; text: string }
-  | { kind: 'signed-out' }
+  | { kind: 'signing-in' }
   | { kind: 'recovery' }
-  | { kind: 'no-access'; user: CloudUser }
-  | { kind: 'not-initialized'; user: CloudUser }
-  | { kind: 'ready'; user: CloudUser; init: CloudInit }
-  | { kind: 'error'; text: string; user?: CloudUser }
+  | { kind: 'not-initialized'; user: CloudUser | null }
+  | { kind: 'ready'; user: CloudUser | null; init: CloudInit }
+  | { kind: 'error'; text: string; user?: CloudUser | null }
 
 export function CloudGate({ children }: { children: ReactNode }) {
-  const [phase, setPhase] = useState<Phase>({ kind: 'loading', text: 'جارٍ التحقق من تسجيل الدخول…' })
+  const [phase, setPhase] = useState<Phase>({ kind: 'loading', text: 'جارٍ تحميل المعرض…' })
   const [loadKey, setLoadKey] = useState(0)
   const current = useRef<string | null>(null)
 
   const load = useCallback(async (session: Session | null) => {
-    if (!session) {
-      current.current = null
-      setPhase({ kind: 'signed-out' })
-      return
-    }
-    current.current = session.user.id
+    current.current = session?.user.id ?? null
     setPhase({ kind: 'loading', text: 'جارٍ تحميل أحدث البيانات من قاعدة البيانات…' })
     try {
-      const p = must(await client().from('profiles').select('email, full_name, role').eq('id', session.user.id).maybeSingle()) as {
-        email: string
-        full_name: string
-        role: Role
-      } | null
-      const user: CloudUser = {
-        id: session.user.id,
-        email: p?.email || session.user.email || '',
-        name: p?.full_name || '',
-        role: p?.role ?? 'pending',
+      let user: CloudUser | null = null
+      if (session) {
+        const p = must(await client().from('profiles').select('email, full_name, role').eq('id', session.user.id).maybeSingle()) as {
+          email: string
+          full_name: string
+          role: Role
+        } | null
+        user = {
+          id: session.user.id,
+          email: p?.email || session.user.email || '',
+          name: p?.full_name || '',
+          role: p?.role ?? 'pending',
+        }
       }
-      if (!canReadRole(user.role)) return setPhase({ kind: 'no-access', user })
       const row = must(await client().from('app_state').select('data, version').eq('id', 'main').maybeSingle()) as {
         data: unknown
         version: number
       } | null
       if (!row) return setPhase({ kind: 'not-initialized', user })
-      setPhase({ kind: 'ready', user, init: { data: row.data, version: Number(row.version), canEdit: canEditRole(user.role) } })
+      setPhase({ kind: 'ready', user, init: { data: row.data, version: Number(row.version), canEdit: canEditRole(user?.role) } })
       setLoadKey((k) => k + 1)
     } catch (e) {
       setPhase({ kind: 'error', text: toCloudError(e).message })
@@ -105,20 +105,21 @@ export function CloudGate({ children }: { children: ReactNode }) {
     await client().auth.signOut()
   }, [])
   const reload = () => void client().auth.getSession().then(({ data }) => load(data.session))
+  const signIn = useCallback(() => setPhase({ kind: 'signing-in' }), [])
 
   if (phase.kind === 'ready')
     return (
-      <CloudContext.Provider value={{ user: phase.user, signOut }}>
-        <StoreProvider key={`${phase.user.id}-${loadKey}`} cloud={phase.init}>
+      <CloudContext.Provider value={{ user: phase.user, signOut, signIn }}>
+        <StoreProvider key={`${phase.user?.id ?? 'guest'}-${loadKey}`} cloud={phase.init}>
           {children}
         </StoreProvider>
       </CloudContext.Provider>
     )
 
   return (
-    <GateShell user={'user' in phase ? phase.user : undefined} onSignOut={signOut}>
+    <GateShell user={'user' in phase ? phase.user ?? undefined : undefined} onSignOut={signOut}>
       {phase.kind === 'loading' && <p className="muted" role="status">{phase.text}</p>}
-      {phase.kind === 'signed-out' && <SignIn />}
+      {phase.kind === 'signing-in' && <SignIn onBack={reload} />}
       {phase.kind === 'recovery' && <NewPassword onDone={reload} />}
       {phase.kind === 'error' && (
         <Message tone="danger" title="تعذر الوصول إلى قاعدة البيانات">
@@ -130,20 +131,8 @@ export function CloudGate({ children }: { children: ReactNode }) {
           </div>
         </Message>
       )}
-      {phase.kind === 'no-access' && (
-        <Message tone={phase.user.role === 'revoked' ? 'danger' : 'info'} title={roleLabels[phase.user.role]}>
-          {phase.user.role === 'revoked'
-            ? 'أُلغيت صلاحية هذا الحساب، فلا يمكنه الاطلاع على بيانات المعرض. تواصلي مع مديرة النظام إن كان ذلك خطأ.'
-            : `سُجّل حسابك (${phase.user.email}) بنجاح، ولم تُمنح له صلاحية بعد. تمنح مديرة النظام الصلاحية من صفحة الإعدادات، ثم تظهر البيانات بعد تحديث الصفحة.`}
-          <div className="row" style={{ marginTop: 12 }}>
-            <button className="btn" onClick={reload}>
-              تحديث
-            </button>
-          </div>
-        </Message>
-      )}
       {phase.kind === 'not-initialized' &&
-        (phase.user.role === 'admin' ? (
+        (phase.user?.role === 'admin' ? (
           <Migration onDone={reload} />
         ) : (
           <Message tone="info" title="لم تُنقل بيانات المعرض إلى قاعدة البيانات بعد">
@@ -152,6 +141,11 @@ export function CloudGate({ children }: { children: ReactNode }) {
               <button className="btn" onClick={reload}>
                 تحديث
               </button>
+              {!phase.user && (
+                <button className="btn subtle" onClick={signIn}>
+                  دخول مديرة النظام
+                </button>
+              )}
             </div>
           </Message>
         ))}
@@ -203,7 +197,7 @@ function Field({ id, label, ...rest }: { id: string; label: string } & React.Inp
 
 const redirectTo = () => window.location.origin + window.location.pathname
 
-function SignIn() {
+function SignIn({ onBack }: { onBack: () => void }) {
   const [mode, setMode] = useState<'in' | 'up' | 'reset'>('in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -247,8 +241,8 @@ function SignIn() {
       <div>
         <h1 className="section-title">{mode === 'in' ? 'تسجيل الدخول' : mode === 'up' ? 'إنشاء حساب' : 'استعادة كلمة المرور'}</h1>
         <p className="muted">
-          بيانات المعرض محفوظة في قاعدة بيانات مركزية، ولا تظهر إلا لمن منحته مديرة النظام صلاحية.
-          {mode === 'up' && ' الحساب الجديد يبقى بانتظار منح الصلاحية.'}
+          المشاهدة متاحة للجميع دون تسجيل دخول. الدخول لمديرة النظام لإضافة البيانات وتعديلها.
+          {mode === 'up' && ' الحساب الجديد للاطلاع فقط ما لم تمنحه مديرة النظام غير ذلك.'}
         </p>
       </div>
       {mode === 'up' && <Field id="gate-name" label="الاسم" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />}
@@ -287,6 +281,9 @@ function SignIn() {
             نسيت كلمة المرور
           </button>
         )}
+        <button type="button" className="btn subtle" onClick={onBack}>
+          العودة إلى المعرض
+        </button>
       </div>
       <p className="caption">لا يطلب الموقع كلمات مرور حسابات Microsoft. استخدمي كلمة مرور خاصة بهذا الموقع (8 أحرف على الأقل).</p>
     </form>

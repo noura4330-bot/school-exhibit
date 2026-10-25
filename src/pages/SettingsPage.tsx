@@ -54,7 +54,7 @@ export default function SettingsPage() {
   const { data, setSettings, replaceAll, readOnly } = useStore()
   const cloud = useCloud()
   // في الحفظ المركزي: الاستيراد يستبدل بيانات الجميع، فهو للمديرة فقط
-  const canImport = !cloud || cloud.user.role === 'admin'
+  const canImport = !cloud || cloud.user?.role === 'admin'
   const { toast, confirm } = useFeedback()
   const [draft, setDraft] = useState<Settings>(data.settings)
   const [errors, setErrors] = useState<Errors>({})
@@ -254,14 +254,14 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {cloud?.user.role === 'admin' && <UsersAdmin me={cloud.user} />}
+      {cloud?.user?.role === 'admin' && <UsersAdmin me={cloud.user} />}
 
       <Section title="الأمان وحماية البيانات" sub="ما يفعله الموقع وما لا يفعله">
         <div className="stack">
           {cloudEnabled ? (
-            <Message tone="info" title="الدخول والصلاحيات تفرضها قاعدة البيانات">
-              لا تظهر البيانات ولا الملفات إلا بعد تسجيل الدخول بحساب منحته مديرة النظام صلاحية. المشرفة تطّلع فقط، والقاعدة نفسها ترفض أي
-              تعديل أو حذف منها أو من أي حساب غير مصرّح له، مهما كانت طريقة الطلب.
+            <Message tone="warning" title="المشاهدة للجميع، والتعديل لمديرة النظام">
+              كل البيانات والملفات ظاهرة لأي زائر للموقع دون تسجيل دخول. الإضافة والتعديل والحذف لمديرة النظام بعد الدخول، والقاعدة نفسها ترفض
+              أي تعديل من غيرها مهما كانت طريقة الطلب.
             </Message>
           ) : (
             <Message tone="warning" title="الموقع ليس نظامًا آمنًا لتعدد المستخدمين">
@@ -272,7 +272,7 @@ export default function SettingsPage() {
             <li>لا يطلب الموقع كلمات مرور حسابات Microsoft ولا يحفظ أي بيانات دخول لها.</li>
             <li>لا يجمع بيانات شخصية عن الطالبات؛ نماذج المشروعات لا تتضمن حقول أسماء.</li>
             {cloudEnabled ? (
-              <li>الملفات في تخزين خاص بلا روابط عامة؛ لا تُنزَّل إلا بعد تسجيل الدخول بحساب مصرّح له.</li>
+              <li>المعرض وملفاته متاحة للمشاهدة والتنزيل لكل زوار الموقع دون تسجيل دخول؛ لا تُرفع ملفات فيها بيانات شخصية دون موافقة.</li>
             ) : (
               <li>لا يرفع أي بيانات أو ملفات إلى خادم أو سحابة؛ كل شيء محفوظ في هذا المتصفح.</li>
             )}

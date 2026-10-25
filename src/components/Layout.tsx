@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { DismissRegular, EditRegular, NavigationRegular, SignOutRegular } from '@fluentui/react-icons'
+import { DismissRegular, EditRegular, NavigationRegular, PersonRegular, SignOutRegular } from '@fluentui/react-icons'
 import { href, type RouteId } from '../lib/router'
 import { navItems } from './nav'
 import { useStore } from '../data/store'
@@ -152,15 +152,24 @@ export function Layout({ route, children }: { route: RouteId; children: ReactNod
           })}
         </ul>
         {cloud ? (
-          <div className="nav-footer nav-user">
-            <div>
-              <strong>{cloud.user.name || cloud.user.email}</strong>
-              <div>{roleLabels[cloud.user.role]}</div>
+          cloud.user ? (
+            <div className="nav-footer nav-user">
+              <div>
+                <strong>{cloud.user.name || cloud.user.email}</strong>
+                <div>{roleLabels[cloud.user.role]}</div>
+              </div>
+              <button className="btn subtle small" onClick={() => void cloud.signOut()}>
+                <SignOutRegular /> تسجيل الخروج
+              </button>
             </div>
-            <button className="btn subtle small" onClick={() => void cloud.signOut()}>
-              <SignOutRegular /> تسجيل الخروج
-            </button>
-          </div>
+          ) : (
+            <div className="nav-footer nav-user">
+              <div>تصفح المعرض متاح للجميع.</div>
+              <button className="btn subtle small" onClick={cloud.signIn}>
+                <PersonRegular /> دخول مديرة النظام
+              </button>
+            </div>
+          )
         ) : (
           <div className="nav-footer">
             البيانات محفوظة في متصفح هذا الجهاز فقط، وليست على خادم أو سحابة. صدّري نسخة احتياطية بانتظام من الإعدادات.

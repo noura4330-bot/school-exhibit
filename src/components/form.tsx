@@ -250,7 +250,7 @@ export function AttachmentsInput({
       )}
       <div className="dropzone">
         <AttachRegular aria-hidden />
-        <span style={{ flex: 1 }}>{busy ? 'جارٍ الحفظ…' : cloudEnabled ? 'تُحفظ الملفات في التخزين الخاص للمعرض، ولا تُنزَّل إلا للمصرّح لهم.' : 'تُحفظ الملفات في متصفح هذا الجهاز فقط.'}</span>
+        <span style={{ flex: 1 }}>{busy ? 'جارٍ الحفظ…' : cloudEnabled ? 'تُحفظ الملفات في قاعدة البيانات المركزية، وتظهر لكل زوار الموقع؛ لا ترفعي ملفًا فيه بيانات شخصية دون موافقة.' : 'تُحفظ الملفات في متصفح هذا الجهاز فقط.'}</span>
         <input
           ref={inputRef}
           id={id}

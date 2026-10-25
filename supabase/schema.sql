@@ -5,7 +5,8 @@
 -- الأدوار:
 --   admin       مديرة النظام: تعدّل كل البيانات، وتمنح الصلاحيات وتلغيها.
 --   editor      مستخدم مصرّح له بالإضافة والتعديل.
---   supervisor  مشرفة: اطلاع فقط على البيانات والتقارير والشواهد، دون تعديل أو حذف.
+--   supervisor  اطلاع فقط (المشرفة والمستخدمون)، دون تعديل أو حذف.
+-- المشاهدة متاحة للجميع دون تسجيل دخول (انظر «المشاهدة العامة» أدناه)؛ التعديل لمن يملك الدور.
 --   pending     حساب جديد بانتظار منح صلاحية: لا يرى شيئًا.
 --   revoked     صلاحية ملغاة: لا يرى شيئًا.
 -- الصلاحيات مفروضة هنا بسياسات RLS ودوال تتحقق من الدور، لا في واجهة الموقع وحدها.
@@ -187,6 +188,18 @@ create policy "exhibit-files: update" on storage.objects for update to authentic
 drop policy if exists "exhibit-files: delete" on storage.objects;
 create policy "exhibit-files: delete" on storage.objects for delete to authenticated
   using (bucket_id = 'exhibit-files' and public.can_edit());
+
+-- ---------- المشاهدة العامة (قرار مديرة النظام 2026-10-25) ----------
+-- بيانات المعرض وملفاته تُقرأ دون تسجيل دخول. الكتابة تبقى عبر الدوال والسياسات أعلاه فقط.
+drop policy if exists "app_state: public read" on public.app_state;
+create policy "app_state: public read" on public.app_state for select to anon, authenticated using (true);
+grant select on public.app_state to anon;
+drop policy if exists "files: public read" on public.files;
+create policy "files: public read" on public.files for select to anon, authenticated using (true);
+grant select on public.files to anon;
+drop policy if exists "exhibit-files: public read" on storage.objects;
+create policy "exhibit-files: public read" on storage.objects for select to anon, authenticated
+  using (bucket_id = 'exhibit-files');
 
 -- ---------- صلاحيات تنفيذ الدوال: للمستخدمين المسجلين فقط ----------
 revoke execute on function public.my_role(), public.can_read(), public.can_edit(), public.is_admin(),
