@@ -2,6 +2,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CheckmarkCircleRegular, DismissRegular, ErrorCircleRegular, InfoRegular } from '@fluentui/react-icons'
 import { newId } from '../lib/util'
+import { cloudEnabled } from '../lib/cloud'
+import { sync } from '../lib/sync'
 
 type ToastKind = 'success' | 'error' | 'info'
 interface ToastItem {
@@ -30,11 +32,20 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const [pending, setPending] = useState<(ConfirmOptions & { resolve: (v: boolean) => void }) | null>(null)
 
-  const toast = useCallback((text: string, kind: ToastKind = 'success') => {
+  const show = useCallback((text: string, kind: ToastKind) => {
     const id = newId()
     setToasts((t) => [...t, { id, kind, text }])
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), kind === 'error' ? 7000 : 4000)
   }, [])
+
+  // رسالة النجاح لا تظهر إلا بعد أن تؤكد قاعدة البيانات الحفظ؛ وإن فشل يظهر الخطأ بدلًا منها (من المخزن)
+  const toast = useCallback(
+    (text: string, kind: ToastKind = 'success') => {
+      if (kind === 'success' && cloudEnabled && sync.busy()) void sync.settle().then((ok) => ok && show(text, kind))
+      else show(text, kind)
+    },
+    [show],
+  )
 
   useEffect(() => {
     const on = (e: Event) => toast(String((e as CustomEvent).detail), 'error')

@@ -11,22 +11,29 @@ const links = [
 
 export function SiteFooter() {
   const { data } = useStore()
+  return <FooterBody schoolName={data.settings.schoolName} />
+}
+
+/** التذييل نفسه، ويُستعمل أيضًا في شاشات الدخول قبل تحميل البيانات (دون روابط الصفحات) */
+export function FooterBody({ schoolName, withLinks = true }: { schoolName: string; withLinks?: boolean }) {
   return (
     <footer className="site-footer no-print">
       <div className="site-footer-inner">
         <div className="site-footer-id">
           <p className="site-footer-name">التمكين المدرسي</p>
-          <p className="site-footer-school">{data.settings.schoolName}</p>
+          <p className="site-footer-school">{schoolName}</p>
         </div>
-        <nav aria-label="روابط التذييل">
-          <ul className="site-footer-links">
-            {links.map((l) => (
-              <li key={l.route}>
-                <a href={href(l.route)}>{l.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {withLinks && (
+          <nav aria-label="روابط التذييل">
+            <ul className="site-footer-links">
+              {links.map((l) => (
+                <li key={l.route}>
+                  <a href={href(l.route)}>{l.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
         <p className="site-footer-about">
           نحو تعليم رقمي مسؤول، وممارسات تعليمية أكثر ابتكارًا. أداة داخلية للتوثيق، ولا تعني حصول المدرسة على اعتراف من Microsoft.
         </p>

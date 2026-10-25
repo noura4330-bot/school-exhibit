@@ -102,10 +102,10 @@ function Actions({ title, onView, onEdit, onDelete }: { title: string; onView: (
       <button type="button" className="btn small" onClick={onView}>
         <OpenRegular /> العرض الكامل
       </button>
-      <button type="button" className="btn subtle small icon" aria-label={`تعديل ${title}`} title="تعديل" onClick={onEdit}>
+      <button type="button" className="btn subtle small icon edit-only" aria-label={`تعديل ${title}`} title="تعديل" onClick={onEdit}>
         <EditRegular />
       </button>
-      <button type="button" className="btn subtle small icon danger" aria-label={`حذف ${title}`} title="حذف" onClick={onDelete}>
+      <button type="button" className="btn subtle small icon danger edit-only" aria-label={`حذف ${title}`} title="حذف" onClick={onDelete}>
         <DeleteRegular />
       </button>
     </div>

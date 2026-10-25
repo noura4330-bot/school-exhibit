@@ -135,7 +135,7 @@ function ProgramEditor({ fields, title, onClose }: { fields: FieldDef[]; title: 
           <button className="btn" onClick={onClose}>
             إلغاء
           </button>
-          <button className="btn primary" onClick={save}>
+          <button className="btn primary edit-only" onClick={save}>
             حفظ
           </button>
         </>
@@ -337,7 +337,7 @@ export default function ReadinessPage() {
             ))}
           </select>
           <span className={`nowrap caption${late ? ' warn' : ''}`}>{t.due ? `${formatDate(t.due)}${late ? ' · متأخرة' : ''}` : 'بلا موعد'}</span>
-          <button className="btn subtle small icon no-print" aria-label={`تعديل ${t.title}`} title="تعديل" onClick={() => taskCrud.openEdit(t)}>
+          <button className="btn subtle small icon no-print edit-only" aria-label={`تعديل ${t.title}`} title="تعديل" onClick={() => taskCrud.openEdit(t)}>
             <EditRegular />
           </button>
         </span>
@@ -474,7 +474,7 @@ export default function ReadinessPage() {
             <h3>مجالات المقياس</h3>
             <span className="caption">المستهدف: الحد الأدنى في دليل التقديم</span>
             <div className="row no-print rd-ind-actions">
-              <button className="btn small" onClick={() => areaCrud.openNew(newArea())}>
+              <button className="btn small edit-only" onClick={() => areaCrud.openNew(newArea())}>
                 <AddRegular /> إضافة مجال
               </button>
             </div>
@@ -522,13 +522,13 @@ export default function ReadinessPage() {
                 <ArrowDownloadRegular /> قالب CSV
               </button>
               <input ref={fileRef} type="file" accept=".csv,text/csv" className="sr-only" aria-label="ملف المؤشرات" onChange={(e) => e.target.files?.[0] && void importCsv(e.target.files[0])} />
-              <button className="btn small" onClick={() => fileRef.current?.click()}>
+              <button className="btn small edit-only" onClick={() => fileRef.current?.click()}>
                 <ArrowUploadRegular /> استيراد CSV
               </button>
               <a className="btn small" href={href('evidence', 'new')}>
                 <AddRegular /> إضافة شاهد
               </a>
-              <button className="btn small primary" onClick={() => indCrud.openNew(newIndicator())} disabled={!data.areas.length}>
+              <button className="btn small primary edit-only" onClick={() => indCrud.openNew(newIndicator())} disabled={!data.areas.length}>
                 <AddRegular /> إضافة مؤشر
               </button>
             </div>
@@ -580,7 +580,7 @@ export default function ReadinessPage() {
                     <li key={a.id}>
                       <Badge tone="warning">ناقص</Badge>
                       <span>«{a.name}» بلا مؤشرات مسجلة.</span>
-                      <button className="btn small no-print" onClick={() => indCrud.openNew({ ...newIndicator(), areaId: a.id })}>
+                      <button className="btn small no-print edit-only" onClick={() => indCrud.openNew({ ...newIndicator(), areaId: a.id })}>
                         إضافة مؤشر
                       </button>
                     </li>
@@ -652,7 +652,7 @@ export default function ReadinessPage() {
             <h3>المهام التالية</h3>
             <span className="caption">مرتبة بالأولوية ثم الموعد</span>
             <div className="row no-print rd-ind-actions">
-              <button className="btn small primary" onClick={() => taskCrud.openNew(newTask())}>
+              <button className="btn small primary edit-only" onClick={() => taskCrud.openNew(newTask())}>
                 <AddRegular /> إضافة مهمة
               </button>
             </div>
@@ -711,7 +711,7 @@ export default function ReadinessPage() {
             <div>
               <div className="rd-sub-head first">
                 <h3>حالة البرنامج</h3>
-                <button className="btn small no-print rd-ind-actions" onClick={() => setEditProgram('program')}>
+                <button className="btn small no-print rd-ind-actions edit-only" onClick={() => setEditProgram('program')}>
                   <EditRegular /> تعديل
                 </button>
               </div>
@@ -739,7 +739,7 @@ export default function ReadinessPage() {
               </dl>
               <div className="rd-sub-head">
                 <h3>الاعتراف الرسمي</h3>
-                <button className="btn small no-print rd-ind-actions" onClick={() => setEditProgram('recognition')}>
+                <button className="btn small no-print rd-ind-actions edit-only" onClick={() => setEditProgram('recognition')}>
                   <EditRegular /> تعديل
                 </button>
               </div>
@@ -773,7 +773,7 @@ export default function ReadinessPage() {
           <div className="rd-sub-head">
             <h3>المراسلات ({formatNumber(data.correspondence.length)})</h3>
             <div className="row no-print rd-ind-actions">
-              <button className="btn small" onClick={() => corrCrud.openNew(newCorr())}>
+              <button className="btn small edit-only" onClick={() => corrCrud.openNew(newCorr())}>
                 <AddRegular /> إضافة مراسلة
               </button>
             </div>

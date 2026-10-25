@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { cloudEnabled } from '../lib/cloud'
 import { ArrowDownloadRegular, ArrowSyncRegular, DeleteRegular, OpenRegular } from '@fluentui/react-icons'
 import { useStore } from '../data/store'
 import type { AppData, Attachment, FileCategory } from '../data/types'
@@ -7,7 +8,7 @@ import { evidenceCompleteness, refKindLabels, refTitle } from '../data/selectors
 import { Badge, EmptyState, Message, PageHeader, Progress, Section } from '../components/ui'
 import { useFeedback } from '../components/feedback'
 import { ClearFilters, DateRange, SearchBox, SelectFilter } from '../components/filters'
-import { deleteFile, downloadStoredFile, listAllFiles, listFileIds, openStoredFile, storageEstimate } from '../lib/fileStore'
+import { deleteFile, downloadStoredFile, listFilesMeta, listFileIds, openStoredFile, storageEstimate } from '../lib/fileStore'
 import { href } from '../lib/router'
 import { formatDate, formatSize, inRange, isValidUrl, matches } from '../lib/util'
 
@@ -134,7 +135,7 @@ export default function FilesPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const [ids, all, est] = await Promise.all([listFileIds(), listAllFiles(), storageEstimate()])
+      const [ids, all, est] = await Promise.all([listFileIds(), listFilesMeta(), storageEstimate()])
       setStored(new Set(ids))
       const referenced = new Set(index.filter((e) => e.file).map((e) => e.file!.id))
       if (data.settings.logoFileId) referenced.add(data.settings.logoFileId)
@@ -142,7 +143,7 @@ export default function FilesPage() {
       setUsage(est)
     } catch {
       setStored(new Set())
-      toast('تعذر قراءة مخزن الملفات المحلي في هذا المتصفح.', 'error')
+      toast(cloudEnabled ? 'تعذر قراءة قائمة الملفات من قاعدة البيانات. تحققي من الاتصال.' : 'تعذر قراءة مخزن الملفات المحلي في هذا المتصفح.', 'error')
     }
   }, [index, data.settings.logoFileId, toast])
 
@@ -153,7 +154,7 @@ export default function FilesPage() {
   const status = (e: Entry): { tone: 'success' | 'warning' | 'danger' | 'neutral'; label: string; ok: boolean } => {
     if (e.file) {
       if (!stored) return { tone: 'neutral', label: 'جارٍ الفحص', ok: true }
-      return stored.has(e.file.id) ? { tone: 'success', label: 'ملف محلي متاح', ok: true } : { tone: 'danger', label: 'ملف مفقود من هذا الجهاز', ok: false }
+      return stored.has(e.file.id) ? { tone: 'success', label: cloudEnabled ? 'ملف متاح' : 'ملف محلي متاح', ok: true } : { tone: 'danger', label: cloudEnabled ? 'ملف مفقود من القاعدة' : 'ملف مفقود من هذا الجهاز', ok: false }
     }
     if (e.url) return isValidUrl(e.url) ? { tone: 'neutral', label: 'رابط خارجي', ok: true } : { tone: 'danger', label: 'رابط غير صالح', ok: false }
     return { tone: 'warning', label: 'بلا ملف أو رابط', ok: false }
@@ -195,8 +196,9 @@ export default function FilesPage() {
         }
       />
       <Message tone="info">
-        الملفات محفوظة في متصفح هذا الجهاز، و«مفقود» يعني أنها غير موجودة فيه (مثل فتح المعرض من جهاز آخر). الروابط الخارجية يُفحص
-        شكلها فقط.
+        {cloudEnabled
+          ? 'الملفات محفوظة في التخزين الخاص بقاعدة البيانات المركزية، و«مفقود» يعني أن السجل يشير إلى ملف غير موجود فيها. الروابط الخارجية يُفحص شكلها فقط.'
+          : 'الملفات محفوظة في متصفح هذا الجهاز، و«مفقود» يعني أنها غير موجودة فيه (مثل فتح المعرض من جهاز آخر). الروابط الخارجية يُفحص شكلها فقط.'}
         {usage && usage.quota > 0 && <> المساحة المستخدمة: {formatSize(usage.usage)} من {formatSize(usage.quota)} متاحة للموقع.</>}
       </Message>
 
@@ -298,7 +300,7 @@ export default function FilesPage() {
           title="ملفات غير مرتبطة بأي سجل"
           sub="بقايا رفع لم يُحفظ أو سجلات حُذفت"
           actions={
-            <button className="btn small danger" onClick={() => void cleanOrphans()}>
+            <button className="btn small danger edit-only" onClick={() => void cleanOrphans()}>
               <DeleteRegular /> حذفها
             </button>
           }

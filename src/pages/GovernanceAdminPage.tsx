@@ -144,7 +144,7 @@ export default function GovernanceAdminPage() {
             <a className="btn" href="#/governance">
               صفحة العرض
             </a>
-            <button className="btn primary" onClick={() => crud.openNew(newItem())}>
+            <button className="btn primary edit-only" onClick={() => crud.openNew(newItem())}>
               <AddRegular /> إضافة عنصر
             </button>
           </>

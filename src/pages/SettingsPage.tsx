@@ -17,6 +17,9 @@ import {
   saveFile,
 } from '../lib/fileStore'
 import { downloadBlob, formatDate, todayIso } from '../lib/util'
+import { cloudEnabled } from '../lib/cloud'
+import { useCloud } from '../components/CloudGate'
+import { UsersAdmin } from '../components/UsersAdmin'
 
 /** بيانات المدرسة والمعرض ثابتة: تُعرض للقراءة فقط ولا تُعدّل من الموقع (طلب 2026-10-25) */
 const fixedInfo: { key: keyof Settings; label: string }[] = [
@@ -48,7 +51,10 @@ interface ExportFile {
 }
 
 export default function SettingsPage() {
-  const { data, setSettings, replaceAll } = useStore()
+  const { data, setSettings, replaceAll, readOnly } = useStore()
+  const cloud = useCloud()
+  // في الحفظ المركزي: الاستيراد يستبدل بيانات الجميع، فهو للمديرة فقط
+  const canImport = !cloud || cloud.user.role === 'admin'
   const { toast, confirm } = useFeedback()
   const [draft, setDraft] = useState<Settings>(data.settings)
   const [errors, setErrors] = useState<Errors>({})
@@ -121,7 +127,7 @@ export default function SettingsPage() {
       if (parsed.app !== 'school-exhibit' || !parsed.data) throw new Error('الملف ليس نسخة احتياطية من هذا المعرض.')
       const ok = await confirm({
         title: 'استيراد النسخة الاحتياطية؟',
-        body: `ستُستبدل كل البيانات الحالية على هذا الجهاز ببيانات النسخة المصدّرة في ${formatDate(parsed.exportedAt?.slice(0, 10))}${parsed.files?.length ? ` مع ${parsed.files.length} ملف` : ''}. ننصح بتصدير نسخة من البيانات الحالية أولًا.`,
+        body: `ستُستبدل كل البيانات الحالية ${cloudEnabled ? 'في قاعدة البيانات المركزية (لكل المستخدمين)' : 'على هذا الجهاز'} ببيانات النسخة المصدّرة في ${formatDate(parsed.exportedAt?.slice(0, 10))}${parsed.files?.length ? ` مع ${parsed.files.length} ملف` : ''}. ننصح بتصدير نسخة من البيانات الحالية أولًا.`,
         confirmLabel: 'استيراد واستبدال',
         danger: true,
       })
@@ -156,27 +162,36 @@ export default function SettingsPage() {
       <Section
         title="السنة الدراسية والعرض"
         actions={
-          <button className="btn primary" onClick={saveInfo}>
+          <button className="btn primary edit-only" onClick={saveInfo}>
             حفظ
           </button>
         }
       >
-        <FormFields
-          fields={infoFields}
-          value={draft as unknown as Record<string, unknown>}
-          errors={errors}
-          onChange={(k, v) => setDraft((d) => ({ ...d, [k]: v }))}
-        />
+        {readOnly ? (
+          <DescList
+            items={infoFields.map((f) => ({
+              label: f.label,
+              value: f.key === 'brand' ? brandOptions.find((o) => o.value === data.settings.brand)?.label ?? '' : String(data.settings[f.key as keyof Settings] ?? '') || '—',
+            }))}
+          />
+        ) : (
+          <FormFields
+            fields={infoFields}
+            value={draft as unknown as Record<string, unknown>}
+            errors={errors}
+            onChange={(k, v) => setDraft((d) => ({ ...d, [k]: v }))}
+          />
+        )}
       </Section>
 
       <Section title="شعار المدرسة" sub="يُستخدم الشعار الرسمي الذي تقدمه المدرسة فقط">
         <div className="row">
           <input ref={logoRef} type="file" accept="image/*" className="sr-only" aria-label="ملف الشعار" onChange={(e) => e.target.files?.[0] && void uploadLogo(e.target.files[0])} />
-          <button className="btn" onClick={() => logoRef.current?.click()}>
+          <button className="btn edit-only" onClick={() => logoRef.current?.click()}>
             <ArrowUploadRegular /> {data.settings.logoFileId ? 'استبدال الشعار' : 'رفع الشعار'}
           </button>
           {data.settings.logoFileId && (
-            <button className="btn danger" onClick={() => void removeLogo()}>
+            <button className="btn danger edit-only" onClick={() => void removeLogo()}>
               <DeleteRegular /> إزالة الشعار
             </button>
           )}
@@ -187,7 +202,7 @@ export default function SettingsPage() {
       <Section
         title="روابط المراجع الرسمية"
         actions={
-          <button className="btn small" onClick={() => linkCrud.openNew({ ...makeBase(), title: '', url: '', note: '', reviewedAt: '' })}>
+          <button className="btn small edit-only" onClick={() => linkCrud.openNew({ ...makeBase(), title: '', url: '', note: '', reviewedAt: '' })}>
             <AddRegular /> إضافة رابط
           </button>
         }
@@ -210,10 +225,17 @@ export default function SettingsPage() {
 
       <Section title="النسخ الاحتياطي والاستيراد">
         <div className="stack">
-          <p className="muted">
-            البيانات محفوظة في هذا المتصفح فقط. حذف بيانات التصفح أو تغيير الجهاز يعني فقدانها ما لم توجد نسخة احتياطية. يمكن نقل النسخة
-            إلى جهاز آخر واستيرادها هناك.
-          </p>
+          {cloudEnabled ? (
+            <p className="muted">
+              البيانات والملفات محفوظة في قاعدة البيانات المركزية، وتظهر لكل المصرّح لهم من أي جهاز، وتحتفظ القاعدة بالإصدارات السابقة. يُنصح
+              مع ذلك بتصدير نسخة احتياطية دورية.{canImport ? '' : ' الاستيراد متاح لمديرة النظام فقط.'}
+            </p>
+          ) : (
+            <p className="muted">
+              البيانات محفوظة في هذا المتصفح فقط. حذف بيانات التصفح أو تغيير الجهاز يعني فقدانها ما لم توجد نسخة احتياطية. يمكن نقل النسخة
+              إلى جهاز آخر واستيرادها هناك.
+            </p>
+          )}
           <div className="row">
             <button className="btn primary" disabled={busy} onClick={() => void exportData(false)}>
               <ArrowDownloadRegular /> تصدير البيانات (JSON)
@@ -222,23 +244,38 @@ export default function SettingsPage() {
               <ArrowDownloadRegular /> تصدير البيانات مع الملفات
             </button>
             <input ref={importRef} type="file" accept=".json,application/json" className="sr-only" aria-label="ملف النسخة الاحتياطية" onChange={(e) => e.target.files?.[0] && void importData(e.target.files[0])} />
-            <button className="btn" disabled={busy} onClick={() => importRef.current?.click()}>
-              <ArrowUploadRegular /> استيراد نسخة احتياطية
-            </button>
+            {canImport && (
+              <button className="btn edit-only" disabled={busy} onClick={() => importRef.current?.click()}>
+                <ArrowUploadRegular /> استيراد نسخة احتياطية
+              </button>
+            )}
           </div>
           <p className="caption">النسخة مع الملفات قد تحتوي بيانات شخصية (مثل سجلات الحضور)؛ احفظيها في مكان آمن ولا تشاركيها.</p>
         </div>
       </Section>
 
+      {cloud?.user.role === 'admin' && <UsersAdmin me={cloud.user} />}
+
       <Section title="الأمان وحماية البيانات" sub="ما يفعله الموقع وما لا يفعله">
         <div className="stack">
-          <Message tone="warning" title="الموقع ليس نظامًا آمنًا لتعدد المستخدمين">
-            لا توجد مصادقة مستخدمين ولا صلاحيات ولا حماية خادمية. أي شخص يستخدم هذا المتصفح على هذا الجهاز يستطيع رؤية البيانات وتعديلها.
-          </Message>
+          {cloudEnabled ? (
+            <Message tone="info" title="الدخول والصلاحيات تفرضها قاعدة البيانات">
+              لا تظهر البيانات ولا الملفات إلا بعد تسجيل الدخول بحساب منحته مديرة النظام صلاحية. المشرفة تطّلع فقط، والقاعدة نفسها ترفض أي
+              تعديل أو حذف منها أو من أي حساب غير مصرّح له، مهما كانت طريقة الطلب.
+            </Message>
+          ) : (
+            <Message tone="warning" title="الموقع ليس نظامًا آمنًا لتعدد المستخدمين">
+              لا توجد مصادقة مستخدمين ولا صلاحيات ولا حماية خادمية. أي شخص يستخدم هذا المتصفح على هذا الجهاز يستطيع رؤية البيانات وتعديلها.
+            </Message>
+          )}
           <ul style={{ margin: 0, paddingInlineStart: 20 }}>
-            <li>لا يطلب الموقع كلمات مرور حسابات Microsoft ولا يحفظ أي بيانات دخول.</li>
+            <li>لا يطلب الموقع كلمات مرور حسابات Microsoft ولا يحفظ أي بيانات دخول لها.</li>
             <li>لا يجمع بيانات شخصية عن الطالبات؛ نماذج المشروعات لا تتضمن حقول أسماء.</li>
-            <li>لا يرفع أي بيانات أو ملفات إلى خادم أو سحابة؛ كل شيء محفوظ في هذا المتصفح.</li>
+            {cloudEnabled ? (
+              <li>الملفات في تخزين خاص بلا روابط عامة؛ لا تُنزَّل إلا بعد تسجيل الدخول بحساب مصرّح له.</li>
+            ) : (
+              <li>لا يرفع أي بيانات أو ملفات إلى خادم أو سحابة؛ كل شيء محفوظ في هذا المتصفح.</li>
+            )}
             <li>عند إضافة روابط OneDrive أو SharePoint، اجعلي صلاحيتها مقتصرة على المخولين وليست عامة افتراضيًا.</li>
             <li>الشواهد المصنفة «حساس» تظهر بتنبيه قبل أي نشر، ولا تُدرج روابطها في التقارير.</li>
           </ul>
@@ -316,7 +353,7 @@ function LinkDrawer({
           <button className="btn" onClick={onClose}>
             إلغاء
           </button>
-          <button className="btn primary" onClick={onSave}>
+          <button className="btn primary edit-only" onClick={onSave}>
             حفظ
           </button>
         </>

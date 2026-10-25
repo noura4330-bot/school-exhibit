@@ -119,7 +119,7 @@ export default function ProjectsPage() {
         title="مشروعات الطالبات"
         lead="عرض المشروعات الطلابية من المشكلة إلى الناتج النهائي، مع حماية هوية الطالبات."
         actions={
-          <button className="btn primary" onClick={() => crud.openNew(blank())}>
+          <button className="btn primary edit-only" onClick={() => crud.openNew(blank())}>
             <AddRegular /> إضافة مشروع
           </button>
         }
@@ -192,7 +192,7 @@ export default function ProjectsPage() {
               <EmptyState
                 title="لم تُسجل مشروعات بعد"
                 action={
-                  <button className="btn primary" onClick={() => crud.openNew(blank())}>
+                  <button className="btn primary edit-only" onClick={() => crud.openNew(blank())}>
                     <AddRegular /> إضافة مشروع
                   </button>
                 }

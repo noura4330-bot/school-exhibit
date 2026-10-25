@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { cloudEnabled } from '../lib/cloud'
 import { AddRegular, DeleteRegular, EditRegular, FolderOpenRegular, SearchRegular } from '@fluentui/react-icons'
 import { makeBase, useStore } from '../data/store'
 import type { Evidence, Ref } from '../data/types'
@@ -47,7 +48,7 @@ const fields: FieldDef[] = [
   { key: 'reviewStatus', label: 'حالة المراجعة', type: 'select', options: reviewStatuses, required: true },
   { key: 'sensitivity', label: 'مستوى حساسية المعلومات', type: 'select', options: sensitivityLevels, required: true },
   { key: 'h2', label: 'الملف أو الرابط', type: 'heading' },
-  { key: 'files', label: 'رفع ملف', type: 'attachments', hint: 'يُحفظ الملف في متصفح هذا الجهاز فقط، وقد لا يكون متاحًا على الأجهزة الأخرى.' },
+  { key: 'files', label: 'رفع ملف', type: 'attachments', hint: cloudEnabled ? 'يُحفظ الملف في التخزين الخاص للمعرض، ويظهر للمصرّح لهم فقط.' : 'يُحفظ الملف في متصفح هذا الجهاز فقط، وقد لا يكون متاحًا على الأجهزة الأخرى.' },
   { key: 'url', label: 'رابط الملف أو مساره', type: 'url', full: true, hint: 'مثل رابط OneDrive أو SharePoint. تأكدي أن صلاحية الرابط ليست عامة إن كان المحتوى داخليًا.' },
   { key: 'h3', label: 'ماذا يثبت هذا الشاهد؟', type: 'heading' },
   { key: 'proves', label: 'ما الذي يثبته الشاهد؟', type: 'textarea', rows: 2 },
@@ -187,7 +188,7 @@ function EvidenceEditor({ initial, isNew, onClose }: { initial: Evidence; isNew:
           <button className="btn" onClick={() => void cancel()}>
             إلغاء
           </button>
-          <button className="btn primary" onClick={() => void save()}>
+          <button className="btn primary edit-only" onClick={() => void save()}>
             حفظ
           </button>
         </>
@@ -250,11 +251,11 @@ function EvidenceView({
       onClose={onClose}
       footer={
         <>
-          <button className="btn danger" onClick={onDelete}>
+          <button className="btn danger edit-only" onClick={onDelete}>
             <DeleteRegular /> حذف
           </button>
           <span className="spacer" />
-          <button className="btn primary" onClick={onEdit}>
+          <button className="btn primary edit-only" onClick={onEdit}>
             <EditRegular /> تعديل البيانات
           </button>
         </>
@@ -294,7 +295,7 @@ function EvidenceView({
               </div>
               <AttachmentList items={e.files} />
               <p className="caption" style={{ marginTop: 4 }}>
-                الملفات محفوظة في متصفح هذا الجهاز فقط.
+                {cloudEnabled ? 'الملفات محفوظة في التخزين الخاص للمعرض.' : 'الملفات محفوظة في متصفح هذا الجهاز فقط.'}
               </p>
             </>
           )}
@@ -387,7 +388,7 @@ export default function EvidencePage({ focusId }: { focusId: string }) {
   const askDelete = async (e: Evidence) => {
     const ok = await confirm({
       title: 'حذف الشاهد؟',
-      body: `سيُحذف «${e.title}» وملفاته المحفوظة على هذا الجهاز، ويُزال ربطه بالمؤشرات والأنشطة. لا يمكن التراجع إلا من نسخة احتياطية.`,
+      body: `سيُحذف «${e.title}» وملفاته المحفوظة ${cloudEnabled ? 'في قاعدة البيانات' : 'على هذا الجهاز'}، ويُزال ربطه بالمؤشرات والأنشطة. لا يمكن التراجع إلا من نسخة احتياطية.`,
       confirmLabel: 'حذف الشاهد',
       danger: true,
     })
@@ -409,13 +410,15 @@ export default function EvidencePage({ focusId }: { focusId: string }) {
         title="الشواهد والأدلة"
         lead="أضيفي الشواهد، واربطيها بالمؤشرات والأنشطة، ووضّحي ما يثبته كل شاهد."
         actions={
-          <button className="btn primary" onClick={() => setEditing({ e: blank(), isNew: true })}>
+          <button className="btn primary edit-only" onClick={() => setEditing({ e: blank(), isNew: true })}>
             <AddRegular /> إضافة شاهد
           </button>
         }
       />
       <Message tone="info">
-        الشواهد والملفات تُحفظ في متصفح هذا الجهاز فقط. للمشاركة استخدمي روابط OneDrive أو SharePoint، وصدّري نسخة احتياطية بانتظام.
+        {cloudEnabled
+          ? 'الشواهد والملفات تُحفظ في قاعدة البيانات المركزية وتظهر للمصرّح لهم فقط. صدّري نسخة احتياطية دورية من الإعدادات.'
+          : 'الشواهد والملفات تُحفظ في متصفح هذا الجهاز فقط. للمشاركة استخدمي روابط OneDrive أو SharePoint، وصدّري نسخة احتياطية بانتظام.'}
       </Message>
 
       <Section
@@ -459,7 +462,7 @@ export default function EvidencePage({ focusId }: { focusId: string }) {
               icon={<FolderOpenRegular />}
               title="لا توجد شواهد بعد"
               action={
-                <button className="btn primary" onClick={() => setEditing({ e: blank(), isNew: true })}>
+                <button className="btn primary edit-only" onClick={() => setEditing({ e: blank(), isNew: true })}>
                   <AddRegular /> إضافة أول شاهد
                 </button>
               }
@@ -512,10 +515,10 @@ export default function EvidencePage({ focusId }: { focusId: string }) {
                         <StatusBadge options={reviewStatuses} value={e.reviewStatus} />
                       </td>
                       <td className="actions no-print">
-                        <button className="btn subtle small icon" aria-label={`تعديل ${e.title}`} title="تعديل" onClick={() => setEditing({ e, isNew: false })}>
+                        <button className="btn subtle small icon edit-only" aria-label={`تعديل ${e.title}`} title="تعديل" onClick={() => setEditing({ e, isNew: false })}>
                           <EditRegular />
                         </button>
-                        <button className="btn subtle small icon danger" aria-label={`حذف ${e.title}`} title="حذف" onClick={() => void askDelete(e)}>
+                        <button className="btn subtle small icon danger edit-only" aria-label={`حذف ${e.title}`} title="حذف" onClick={() => void askDelete(e)}>
                           <DeleteRegular />
                         </button>
                       </td>
@@ -542,10 +545,10 @@ export default function EvidencePage({ focusId }: { focusId: string }) {
                   </div>
                 </div>
                 <div className="row no-print" style={{ flexWrap: 'nowrap' }}>
-                  <button className="btn subtle small icon" aria-label={`تعديل ${e.title}`} onClick={() => setEditing({ e, isNew: false })}>
+                  <button className="btn subtle small icon edit-only" aria-label={`تعديل ${e.title}`} onClick={() => setEditing({ e, isNew: false })}>
                     <EditRegular />
                   </button>
-                  <button className="btn subtle small icon danger" aria-label={`حذف ${e.title}`} onClick={() => void askDelete(e)}>
+                  <button className="btn subtle small icon danger edit-only" aria-label={`حذف ${e.title}`} onClick={() => void askDelete(e)}>
                     <DeleteRegular />
                   </button>
                 </div>

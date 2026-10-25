@@ -37,7 +37,7 @@ function Missing({ items, onEdit }: { items: [string, string | undefined][]; onE
   return (
     <p className="ipf-missing">
       <span>لم يُسجل بعد: {miss.join('، ')}.</span>
-      <button type="button" className="link-btn no-print" onClick={onEdit}>
+      <button type="button" className="link-btn no-print edit-only" onClick={onEdit}>
         <EditRegular aria-hidden /> إكمال من «تعديل الملف»
       </button>
     </p>

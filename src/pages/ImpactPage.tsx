@@ -139,7 +139,7 @@ export default function ImpactPage() {
         title="قياس الأثر"
         lead="لكل مؤشر خط أساس ومستهدف ونتيجة فعلية، مع طريقة القياس ومصدره."
         actions={
-          <button className="btn primary" onClick={() => crud.openNew(create())}>
+          <button className="btn primary edit-only" onClick={() => crud.openNew(create())}>
             <AddRegular /> إضافة مؤشر أثر
           </button>
         }
@@ -152,7 +152,7 @@ export default function ImpactPage() {
             {impactExamples.map((ex) => (
               <button
                 key={ex.title}
-                className="btn"
+                className="btn edit-only"
                 disabled={active.has(ex.title)}
                 onClick={() => crud.openNew(create(ex.title, ex.unit))}
                 title={active.has(ex.title) ? 'مفعّل' : 'تفعيل'}
@@ -176,7 +176,7 @@ export default function ImpactPage() {
           <EmptyState
             title="لم تُسجل مؤشرات أثر بعد"
             action={
-              <button className="btn primary" onClick={() => crud.openNew(create())}>
+              <button className="btn primary edit-only" onClick={() => crud.openNew(create())}>
                 <AddRegular /> إضافة مؤشر أثر
               </button>
             }
@@ -199,7 +199,7 @@ export default function ImpactPage() {
                     <button className="btn small" onClick={() => crud.openView(m)}>
                       التفاصيل
                     </button>
-                    <button className="btn small icon" aria-label={`تعديل ${m.title}`} onClick={() => crud.openEdit(m)}>
+                    <button className="btn small icon edit-only" aria-label={`تعديل ${m.title}`} onClick={() => crud.openEdit(m)}>
                       <EditRegular />
                     </button>
                   </>

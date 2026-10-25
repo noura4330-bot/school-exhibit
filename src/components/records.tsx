@@ -1,5 +1,6 @@
 // إدارة السجلات العامة: نموذج الإضافة والتعديل، وعرض التفاصيل، والحذف بعد التأكيد، وعرض القائمة أو الجدول.
 import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { cloudEnabled } from '../lib/cloud'
 import { DeleteRegular, EditRegular, GridRegular, TableRegular } from '@fluentui/react-icons'
 import type { Attachment, BaseRecord, CollectionKey, Evidence, RefKind } from '../data/types'
 import { useStore } from '../data/store'
@@ -112,7 +113,7 @@ export function RecordEditor<T extends BaseRecord>({
           <button className="btn" onClick={() => void cancel()}>
             إلغاء
           </button>
-          <button className="btn primary" onClick={() => void save()}>
+          <button className="btn primary edit-only" onClick={() => void save()}>
             حفظ
           </button>
         </>
@@ -260,11 +261,11 @@ export function RecordCollection<T extends BaseRecord>({
   if (!items.length) return <>{empty}</>
   const actions = (item: T) => (
     <>
-      <button className="btn subtle small icon" aria-label={`تعديل ${getTitle(item)}`} title="تعديل" onClick={() => onEdit(item)}>
+      <button className="btn subtle small icon edit-only" aria-label={`تعديل ${getTitle(item)}`} title="تعديل" onClick={() => onEdit(item)}>
         <EditRegular />
       </button>
       <button
-        className="btn subtle small icon danger"
+        className="btn subtle small icon danger edit-only"
         aria-label={`حذف ${getTitle(item)}`}
         title="حذف"
         onClick={() => onDelete(item)}
@@ -352,7 +353,7 @@ export function useCrud<T extends BaseRecord>(key: CollectionKey, config: Editor
       title: 'حذف السجل؟',
       body: (
         <>
-          سيُحذف «{titleOf(item) || 'بلا عنوان'}» وملفاته المرفقة من هذا الجهاز، وتُزال روابطه بالشواهد. لا يمكن التراجع إلا من نسخة
+          سيُحذف «{titleOf(item) || 'بلا عنوان'}» وملفاته المرفقة {cloudEnabled ? 'من قاعدة البيانات المركزية' : 'من هذا الجهاز'}، وتُزال روابطه بالشواهد. لا يمكن التراجع إلا من نسخة
           احتياطية.
         </>
       ),
@@ -383,13 +384,13 @@ export function useCrud<T extends BaseRecord>(key: CollectionKey, config: Editor
           footer={
             <>
               {!config.noDelete && (
-                <button className="btn danger" onClick={() => void askDelete(viewing)}>
+                <button className="btn danger edit-only" onClick={() => void askDelete(viewing)}>
                   <DeleteRegular /> حذف
                 </button>
               )}
               <span className="spacer" />
               <button
-                className="btn primary"
+                className="btn primary edit-only"
                 onClick={() => {
                   setEditing({ item: viewing, isNew: false })
                   setViewing(null)

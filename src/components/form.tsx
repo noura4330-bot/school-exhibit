@@ -1,5 +1,6 @@
 // نماذج مبنية من تعريف الحقول، مع التحقق قبل الحفظ.
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { cloudEnabled } from '../lib/cloud'
 import {
   ArrowDownloadRegular,
   AttachRegular,
@@ -249,7 +250,7 @@ export function AttachmentsInput({
       )}
       <div className="dropzone">
         <AttachRegular aria-hidden />
-        <span style={{ flex: 1 }}>{busy ? 'جارٍ الحفظ…' : 'تُحفظ الملفات في متصفح هذا الجهاز فقط.'}</span>
+        <span style={{ flex: 1 }}>{busy ? 'جارٍ الحفظ…' : cloudEnabled ? 'تُحفظ الملفات في التخزين الخاص للمعرض، ولا تُنزَّل إلا للمصرّح لهم.' : 'تُحفظ الملفات في متصفح هذا الجهاز فقط.'}</span>
         <input
           ref={inputRef}
           id={id}
@@ -269,7 +270,7 @@ export function AttachmentsInput({
 
 export function AttachmentList({ items, onRemove }: { items: Attachment[]; onRemove?: (a: Attachment) => void }) {
   const { toast } = useFeedback()
-  const missing = () => toast('الملف غير موجود في متصفح هذا الجهاز. ربما أُضيف من جهاز آخر أو حُذفت بيانات المتصفح.', 'error')
+  const missing = () => toast(cloudEnabled ? 'الملف غير موجود في قاعدة البيانات، أو تعذر تنزيله. تحققي من الاتصال.' : 'الملف غير موجود في متصفح هذا الجهاز. ربما أُضيف من جهاز آخر أو حُذفت بيانات المتصفح.', 'error')
   return (
     <ul className="attachments" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
       {items.map((a) => (
@@ -300,7 +301,7 @@ export function AttachmentList({ items, onRemove }: { items: Attachment[]; onRem
           {onRemove && (
             <button
               type="button"
-              className="btn subtle small icon danger"
+              className="btn subtle small icon danger edit-only"
               aria-label={`إزالة ${a.name}`}
               title="إزالة"
               onClick={() => onRemove(a)}

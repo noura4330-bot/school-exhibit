@@ -7770,3 +7770,136 @@ textarea:focus-visible {
     display: none;
   }
 }
+
+/* ===== الحفظ المركزي (ب4): حالة الحفظ، والمستخدم، وشاشات الدخول، والاطلاع فقط ===== */
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--fg2, var(--fg1));
+  background: var(--ice-2);
+  border: 1px solid var(--rule);
+  white-space: nowrap;
+}
+.sync-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success-solid);
+}
+.sync-status.saving .dot {
+  background: var(--brand);
+  animation: sync-pulse 1s ease-in-out infinite;
+}
+.sync-status.error,
+.sync-status.offline {
+  color: var(--danger-fg);
+  background: var(--danger-bg);
+}
+.sync-status.error .dot,
+.sync-status.offline .dot {
+  background: var(--danger-solid);
+}
+.sync-status .btn.small {
+  min-height: 0;
+  padding: 0 6px;
+}
+@keyframes sync-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-status.saving .dot {
+    animation: none;
+  }
+}
+.nav-user {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-s);
+}
+.nav-user strong {
+  color: var(--fg1);
+  font-weight: var(--w-semibold);
+  overflow-wrap: anywhere;
+}
+.nav-user .btn {
+  align-self: flex-start;
+}
+.gate {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ice-2);
+}
+.gate-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-xxl) 16px 0;
+}
+.gate-main:focus {
+  outline: none;
+}
+.gate-card {
+  width: min(560px, 100%);
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-l, 12px);
+  box-shadow: var(--shadow-2, 0 2px 10px rgba(0, 0, 0, 0.06));
+  margin-bottom: var(--s-xxl);
+}
+.gate-card h1.section-title {
+  margin: 0 0 4px;
+}
+.gate-main > .site-footer {
+  width: 100%;
+  margin-top: auto;
+}
+/* حساب الاطلاع فقط (المشرفة): لا تظهر أدوات الإضافة والتعديل والحذف والرفع.
+   الإخفاء للوضوح فقط؛ المنع الفعلي في سياسات قاعدة البيانات */
+html[data-access='read'] .edit-only {
+  display: none !important;
+}
+html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
+  pointer-events: none;
+}
+@media (max-width: 900px) {
+  .header-meta .sync-status span:not(.dot) {
+    font-size: 11px;
+  }
+}
+.gate-card > .section-body {
+  padding: var(--s-xxl, 24px);
+}
+@media (max-width: 600px) {
+  .gate-card > .section-body {
+    padding: 18px 16px;
+  }
+}
+/* على الجوال: حالة الحفظ تظهر شريطًا صغيرًا أسفل الشاشة فقط أثناء الحفظ أو عند تعذره */
+@media (max-width: 640px) {
+  .app-header .header-meta:has(.sync-status:not(.idle)) {
+    display: block;
+    width: 0;
+  }
+  .app-header .header-meta:has(.sync-status:not(.idle)) .meta-item {
+    display: none;
+  }
+  .header-meta .sync-status:not(.idle) {
+    position: fixed;
+    bottom: 12px;
+    inset-inline-start: 12px;
+    z-index: 60;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  }
+  .header-meta .sync-status:not(.idle) span:not(.dot) {
+    font-size: var(--t-caption);
+  }
+}

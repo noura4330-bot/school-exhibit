@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { DismissRegular, EditRegular, NavigationRegular } from '@fluentui/react-icons'
+import { DismissRegular, EditRegular, NavigationRegular, SignOutRegular } from '@fluentui/react-icons'
 import { href, type RouteId } from '../lib/router'
 import { navItems } from './nav'
 import { useStore } from '../data/store'
@@ -9,6 +9,9 @@ import { Modal, useFeedback } from './feedback'
 import { SiteFooter } from './SiteFooter'
 import { identityHeader } from './identity'
 import { useReveal } from '../lib/motion'
+import { useCloud } from './CloudGate'
+import { SyncStatus } from './SyncStatus'
+import { roleLabels } from '../lib/cloud'
 
 function useLogo(fileId: string | null) {
   const [url, setUrl] = useState<string | null>(null)
@@ -36,8 +39,9 @@ function useLogo(fileId: string | null) {
 }
 
 export function Layout({ route, children }: { route: RouteId; children: ReactNode }) {
-  const { data, setSettings } = useStore()
+  const { data, setSettings, readOnly } = useStore()
   const { toast } = useFeedback()
+  const cloud = useCloud()
   const [menuOpen, setMenuOpen] = useState(false)
   const [yearOpen, setYearOpen] = useState(false)
   const [year, setYear] = useState('')
@@ -60,6 +64,11 @@ export function Layout({ route, children }: { route: RouteId; children: ReactNod
   useEffect(() => {
     document.documentElement.dataset.brand = s.brand
   }, [s.brand])
+  // حساب الاطلاع فقط: تُخفى أدوات التعديل (والقاعدة ترفض أي تعديل على كل حال)
+  useEffect(() => {
+    if (readOnly) document.documentElement.dataset.access = 'read'
+    else delete document.documentElement.dataset.access
+  }, [readOnly])
   useEffect(() => {
     const label = navItems.find((n) => n.id === route)?.label
     document.title = `${label ? `${label} | ` : ''}${s.exhibitName}`
@@ -101,12 +110,13 @@ export function Layout({ route, children }: { route: RouteId; children: ReactNod
           </span>
         </a>
         <div className="header-meta">
+          {cloud && <SyncStatus />}
           <div className="meta-item year">
             <span>السنة الدراسية</span>
             <span className="row" style={{ gap: 2 }}>
               <strong>{s.academicYear || 'لم تُحدد'}</strong>
               <button
-                className="btn subtle small icon no-print"
+                className="btn subtle small icon no-print edit-only"
                 aria-label="تعديل السنة الدراسية"
                 title="تعديل السنة الدراسية"
                 onClick={() => {
@@ -141,9 +151,21 @@ export function Layout({ route, children }: { route: RouteId; children: ReactNod
             )
           })}
         </ul>
-        <div className="nav-footer">
-          البيانات محفوظة في متصفح هذا الجهاز فقط، وليست على خادم أو سحابة. صدّري نسخة احتياطية بانتظام من الإعدادات.
-        </div>
+        {cloud ? (
+          <div className="nav-footer nav-user">
+            <div>
+              <strong>{cloud.user.name || cloud.user.email}</strong>
+              <div>{roleLabels[cloud.user.role]}</div>
+            </div>
+            <button className="btn subtle small" onClick={() => void cloud.signOut()}>
+              <SignOutRegular /> تسجيل الخروج
+            </button>
+          </div>
+        ) : (
+          <div className="nav-footer">
+            البيانات محفوظة في متصفح هذا الجهاز فقط، وليست على خادم أو سحابة. صدّري نسخة احتياطية بانتظام من الإعدادات.
+          </div>
+        )}
       </nav>
 
       <main id="main" className="app-main" tabIndex={-1}>

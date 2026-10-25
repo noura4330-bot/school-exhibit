@@ -1,7 +1,9 @@
-// تخزين الملفات المرفوعة في IndexedDB داخل متصفح هذا الجهاز فقط.
-// الملفات لا تنتقل إلى أجهزة أخرى ولا تُرفع إلى أي خادم.
+// تخزين الملفات المرفوعة. في الحفظ المحلي: IndexedDB داخل متصفح هذا الجهاز فقط.
+// وفي الحفظ المركزي (cloudEnabled): تخزين خاص في Supabase عبر cloudFiles.ts، والدوال المصدّرة هنا تختار بينهما.
 import type { StoredFileMeta } from '../data/types'
 import { downloadBlob, isEmbedded, newId, nowIso } from './util'
+import { cloudEnabled } from './cloud'
+import { cloudDeleteFile, cloudGetFile, cloudListAllFiles, cloudListFileIds, cloudListFilesMeta, cloudPutRawFile, cloudSaveFile } from './cloudFiles'
 
 const DB_NAME = 'school-exhibit-files'
 const STORE = 'files'
@@ -48,7 +50,7 @@ function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequ
 
 export const MAX_FILE_BYTES = 50 * 1024 * 1024
 
-export async function saveFile(file: File | Blob, name?: string): Promise<StoredFileMeta> {
+async function localSaveFile(file: File | Blob, name?: string): Promise<StoredFileMeta> {
   if (file.size > MAX_FILE_BYTES) {
     throw new Error(`حجم الملف أكبر من الحد المسموح (50 م.ب)`)
   }
@@ -64,30 +66,46 @@ export async function saveFile(file: File | Blob, name?: string): Promise<Stored
   return meta
 }
 
-export async function getFile(id: string): Promise<StoredFile | undefined> {
+async function localGetFile(id: string): Promise<StoredFile | undefined> {
   return tx<StoredFile | undefined>('readonly', (s) => s.get(id) as IDBRequest<StoredFile | undefined>)
 }
 
-export async function deleteFile(id: string): Promise<void> {
+async function localDeleteFile(id: string): Promise<void> {
   await tx('readwrite', (s) => s.delete(id))
 }
 
-export async function listFileIds(): Promise<string[]> {
+async function localListFileIds(): Promise<string[]> {
   const keys = await tx('readonly', (s) => s.getAllKeys())
   return keys.map(String)
 }
 
-export async function listAllFiles(): Promise<StoredFile[]> {
+async function localListAllFiles(): Promise<StoredFile[]> {
   return tx<StoredFile[]>('readonly', (s) => s.getAll() as IDBRequest<StoredFile[]>)
 }
 
-export async function clearFiles(): Promise<void> {
+async function localClearFiles(): Promise<void> {
   await tx('readwrite', (s) => s.clear())
 }
 
-export async function putRawFile(record: StoredFileMeta & { blob: Blob }): Promise<void> {
+async function localPutRawFile(record: StoredFileMeta & { blob: Blob }): Promise<void> {
   await tx('readwrite', (s) => s.put(record))
 }
+
+/** ملفات IndexedDB على هذا الجهاز، حتى في الحفظ المركزي (لنقلها إلى القاعدة) */
+export const localFiles = { listAll: localListAllFiles, get: localGetFile, put: localPutRawFile }
+
+export const saveFile = (file: File | Blob, name?: string) => {
+  if (file.size > MAX_FILE_BYTES) return Promise.reject(new Error('حجم الملف أكبر من الحد المسموح (50 م.ب)'))
+  return cloudEnabled ? cloudSaveFile(file, name) : localSaveFile(file, name)
+}
+export const getFile = (id: string) => (cloudEnabled ? cloudGetFile(id) : localGetFile(id))
+export const deleteFile = (id: string) => (cloudEnabled ? cloudDeleteFile(id) : localDeleteFile(id))
+export const listFileIds = () => (cloudEnabled ? cloudListFileIds() : localListFileIds())
+export const listAllFiles = () => (cloudEnabled ? cloudListAllFiles() : localListAllFiles())
+export const listFilesMeta = (): Promise<StoredFileMeta[]> =>
+  cloudEnabled ? cloudListFilesMeta() : localListAllFiles().then((all) => all.map(({ blob: _b, ...m }) => (void _b, m)))
+export const clearFiles = () => (cloudEnabled ? Promise.resolve() : localClearFiles())
+export const putRawFile = (record: StoredFileMeta & { blob: Blob }) => (cloudEnabled ? cloudPutRawFile(record) : localPutRawFile(record))
 
 /** فتح الملف للمعاينة؛ داخل الصفحة المنشورة لا تُفتح نوافذ جديدة، فيُعرض التنزيل بدلًا من ذلك */
 export async function openStoredFile(id: string): Promise<boolean> {
@@ -111,6 +129,7 @@ export async function downloadStoredFile(id: string): Promise<boolean> {
 }
 
 export async function storageEstimate(): Promise<{ usage: number; quota: number } | null> {
+  if (cloudEnabled) return null
   if (!navigator.storage?.estimate) return null
   const e = await navigator.storage.estimate()
   return { usage: e.usage ?? 0, quota: e.quota ?? 0 }

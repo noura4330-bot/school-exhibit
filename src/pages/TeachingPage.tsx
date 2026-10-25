@@ -97,7 +97,7 @@ export default function TeachingPage() {
             <button className="btn" onClick={() => crud.openNew(fromStemTemplate())}>
               <BeakerRegular /> درس STEM من النموذج
             </button>
-            <button className="btn primary" onClick={() => crud.openNew(blank())}>
+            <button className="btn primary edit-only" onClick={() => crud.openNew(blank())}>
               <AddRegular /> إضافة ممارسة
             </button>
           </>
@@ -155,7 +155,7 @@ export default function TeachingPage() {
               <EmptyState
                 title="لا توجد ممارسات بعد"
                 action={
-                  <button className="btn primary" onClick={() => crud.openNew(blank())}>
+                  <button className="btn primary edit-only" onClick={() => crud.openNew(blank())}>
                     <AddRegular /> إضافة ممارسة
                   </button>
                 }

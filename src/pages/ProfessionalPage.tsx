@@ -91,7 +91,7 @@ export default function ProfessionalPage() {
         title="التطوير المهني"
         lead="توثيق ورش المعلمات: الحضور، والتطبيق الناتج عن التدريب، وقياس الاستفادة."
         actions={
-          <button className="btn primary" onClick={() => crud.openNew(newItem())}>
+          <button className="btn primary edit-only" onClick={() => crud.openNew(newItem())}>
             <AddRegular /> إضافة ورشة
           </button>
         }
@@ -155,7 +155,7 @@ export default function ProfessionalPage() {
               <EmptyState
                 title="لم تُسجل ورش بعد"
                 action={
-                  <button className="btn primary" onClick={() => crud.openNew(newItem())}>
+                  <button className="btn primary edit-only" onClick={() => crud.openNew(newItem())}>
                     <AddRegular /> إضافة ورشة
                   </button>
                 }

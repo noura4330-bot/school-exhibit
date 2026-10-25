@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cloudEnabled } from '../lib/cloud'
 import { ArrowDownloadRegular, PrintRegular } from '@fluentui/react-icons'
 import { useStore } from '../data/store'
 import { buildReport, reportTypes, type ReportType } from '../data/reports'
@@ -170,7 +171,7 @@ export default function ReportsPage() {
           {r.notes.map((n) => (
             <p key={n}>{n}</p>
           ))}
-          <p>أُعد هذا التقرير آليًا من البيانات المسجلة في المعرض على هذا الجهاز بتاريخ {formatDate(todayIso())}. يُراجع قبل اعتماده.</p>
+          <p>أُعد هذا التقرير آليًا من البيانات المسجلة في المعرض {cloudEnabled ? 'في قاعدة البيانات المركزية' : 'على هذا الجهاز'} بتاريخ {formatDate(todayIso())}. يُراجع قبل اعتماده.</p>
         </footer>
       </article>
     </>

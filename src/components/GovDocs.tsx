@@ -146,7 +146,7 @@ export function GovDocCard({
           <button className="btn" onClick={onView}>
             عرض الوثيقة
           </button>
-          <button className="btn primary" onClick={onEdit}>
+          <button className="btn primary edit-only" onClick={onEdit}>
             <EditRegular /> تحديث الوثيقة
           </button>
         </div>

@@ -1,6 +1,8 @@
 import { Component, useEffect, type ReactNode } from 'react'
 import { StoreProvider, useStore } from './data/store'
 import { FeedbackProvider } from './components/feedback'
+import { CloudGate } from './components/CloudGate'
+import { cloudEnabled } from './lib/cloud'
 import { Layout } from './components/Layout'
 import { Message } from './components/ui'
 import { useRoute, type RouteId } from './lib/router'
@@ -74,11 +76,18 @@ function Shell() {
 }
 
 export default function App() {
+  // الحفظ المركزي: لا يُعرض الموقع قبل تسجيل الدخول بحساب مصرّح له وتحميل البيانات من القاعدة
   return (
-    <StoreProvider>
-      <FeedbackProvider>
-        <Shell />
-      </FeedbackProvider>
-    </StoreProvider>
+    <FeedbackProvider>
+      {cloudEnabled ? (
+        <CloudGate>
+          <Shell />
+        </CloudGate>
+      ) : (
+        <StoreProvider>
+          <Shell />
+        </StoreProvider>
+      )}
+    </FeedbackProvider>
   )
 }

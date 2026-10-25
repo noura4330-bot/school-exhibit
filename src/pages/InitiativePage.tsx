@@ -168,7 +168,7 @@ function ProfileEditor({ onClose }: { onClose: () => void }) {
           <button className="btn" onClick={onClose}>
             إلغاء
           </button>
-          <button className="btn primary" onClick={save}>
+          <button className="btn primary edit-only" onClick={save}>
             حفظ
           </button>
         </>
@@ -269,7 +269,7 @@ export default function InitiativePage() {
                 <button className="link-btn" onClick={() => jump('ini-report')}>
                   التقرير
                 </button>
-                <button className="link-btn" onClick={() => setEditing(true)}>
+                <button className="link-btn edit-only" onClick={() => setEditing(true)}>
                   <EditRegular aria-hidden /> تعديل الملف
                 </button>
               </span>
@@ -290,7 +290,7 @@ export default function InitiativePage() {
             </>
           }
           actions={
-            <button className="btn small" onClick={() => setEditing(true)}>
+            <button className="btn small edit-only" onClick={() => setEditing(true)}>
               <EditRegular /> تعديل الملف
             </button>
           }
@@ -413,14 +413,14 @@ export default function InitiativePage() {
                     </option>
                   ))}
                 </select>
-                <button className="btn primary small" onClick={() => taskCrud.openNew(newTask())}>
+                <button className="btn primary small edit-only" onClick={() => taskCrud.openNew(newTask())}>
                   <AddRegular /> إضافة مهمة
                 </button>
               </>
             ) : (
               <>
                 <ViewToggle view={view} onChange={setView} />
-                <button className="btn primary small" onClick={() => crud.openNew(newActivity())}>
+                <button className="btn primary small edit-only" onClick={() => crud.openNew(newActivity())}>
                   <AddRegular /> إضافة نشاط
                 </button>
               </>
@@ -475,7 +475,7 @@ export default function InitiativePage() {
                     مسح التصفية
                   </button>
                 ) : (
-                  <button className="btn primary" onClick={() => taskCrud.openNew(newTask())}>
+                  <button className="btn primary edit-only" onClick={() => taskCrud.openNew(newTask())}>
                     <AddRegular /> إضافة مهمة
                   </button>
                 )
@@ -525,7 +525,7 @@ export default function InitiativePage() {
                 <EmptyState
                   title="لم تُسجل أنشطة بعد"
                   action={
-                    <button className="btn primary" onClick={() => crud.openNew(newActivity())}>
+                    <button className="btn primary edit-only" onClick={() => crud.openNew(newActivity())}>
                       <AddRegular /> إضافة أول نشاط
                     </button>
                   }

@@ -2,6 +2,7 @@
 // التفاصيل الإدارية (العناصر وحالاتها والتقييم الذاتي) في لوحة المتابعة الداخلية #/governance/manage.
 // لا يُعرض شيء معتمدًا أو مطبقًا إلا بما تثبته المراحل والشواهد المسجلة.
 import type { ReactNode } from 'react'
+import { cloudEnabled } from '../lib/cloud'
 import { DocumentRegular, OpenRegular } from '@fluentui/react-icons'
 import { useStore } from '../data/store'
 import type { AppData, GovernanceDoc, PolicyItem } from '../data/types'
@@ -141,7 +142,7 @@ export default function GovernancePage() {
     if (!doc) return
     if (doc.files[0] && (await openStoredFile(doc.files[0].id).catch(() => false))) return
     if (doc.url) return void window.open(doc.url, '_blank', 'noopener')
-    if (doc.files[0]) toast('ملف الوثيقة غير موجود في متصفح هذا الجهاز.', 'error')
+    if (doc.files[0]) toast(cloudEnabled ? 'تعذر فتح ملف الوثيقة من قاعدة البيانات.' : 'ملف الوثيقة غير موجود في متصفح هذا الجهاز.', 'error')
     docCrud.openView(doc)
   }
 
