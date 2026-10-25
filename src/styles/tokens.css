@@ -1,0 +1,230 @@
+/*
+  هوية «معرض التمكين المدرسي» المستخرجة من صورة الغلاف (ب1): رمادي فاتح متدرج، وأزرق داكن مائل إلى الرمادي
+  في العناوين والشريط السفلي، وأزرق المحيط الهادئ في الكرة الأرضية. كل ألوان الموقع تُشتق من متغيرات --color-*
+  أدناه؛ تعديلها هنا يغير الهوية في كل الصفحات. أسماء الرموز القديمة (navy/blue/emerald/teal/gold) باقية لأن
+  المكونات تستخدمها، وقيمها مربوطة بهذه المتغيرات.
+  التباين: --color-primary على الأبيض 8.5:1، و--color-accent على الأبيض 5.8:1، و--color-muted على الأبيض 5.5:1.
+*/
+:root {
+  /* ===== المتغيرات المركزية للهوية ===== */
+  --color-primary: #354f66; /* الأزرق الداكن المائل إلى الرمادي: العناوين، الترويسات، الأسطح الداكنة */
+  --color-primary-dark: #2a4054; /* أعمق قليلًا للتدرج في الأسطح الداكنة */
+  --color-primary-light: #e7ecf1; /* خلفية العناصر المحددة */
+  --color-accent: #3e6a8c; /* الأزرق المتوسط الهادئ (من المحيط في الكرة): الأزرار والروابط والحالات النشطة */
+  --color-accent-hover: #355d7c;
+  --color-accent-pressed: #2d5070;
+  --color-accent-soft: #c9d8e4; /* حدود العناصر التفاعلية وخطوطها الخفيفة */
+  --color-background: #f8f8f7; /* الأبيض الدافئ: خلفية الصفحة */
+  --color-surface: #ffffff; /* البطاقات ومساحات المحتوى */
+  --color-section: #eff1f3; /* الرمادي الفاتح جدًا: خلفيات الأقسام الثانوية */
+  --color-section-2: #f4f5f6;
+  --color-text: #33475a; /* النص الأساسي */
+  --color-text-strong: #2a3d50;
+  --color-muted: #5d6a75; /* النص الثانوي */
+  --color-border: #dde3e8; /* الرمادي المزرق الفاتح: الحدود والفواصل */
+  --color-border-soft: #e9edf0;
+  --color-border-strong: #c6cdd3; /* حدود الحقول */
+  --color-shadow: 53, 79, 102; /* قيم RGB لظلال --color-primary */
+
+  /* ===== الرموز القديمة مربوطة بالمتغيرات المركزية ===== */
+  --navy: var(--color-primary); /* أزرق داكن للعناوين والأسطح الداكنة */
+  --navy-2: #3f5a72;
+  --navy-3: var(--color-primary-dark);
+  --blue: var(--color-accent); /* الأزرق الملكي الرئيسي */
+  --emerald: var(--color-accent);
+  --emerald-2: var(--color-accent);
+  --teal: var(--color-accent); /* أزرق سماوي للتفاصيل التقنية */
+  --teal-ink: var(--color-accent); /* أزرق للنصوص على الخلفيات الفاتحة */
+  --ice: var(--color-primary-light); /* أزرق فاتح جدًا */
+  --ice-2: var(--color-section-2);
+  --warm: var(--color-background); /* أبيض مزرق */
+  --green: #b9c9b0;
+  --gold: var(--color-accent); /* اسم قديم: صار أزرق متوسطًا للتسميات والخطوط الصغيرة */
+  --gold-soft: #f4eedd;
+  /* مستخرجة من صورة الهوية: العاجي الدافئ والذهبي الهادئ */
+  --ivory: var(--color-background);
+  --ivory-2: #fbfbfa;
+  --ivory-rule: var(--color-border);
+  --gold-calm: var(--color-accent); /* اسم قديم: سماوي للأرقام والخطوط */
+  --gold-light: #d9c79c; /* رملي فاتح للمسودات والمخرجات المتوقعة فقط */
+
+  /* العلامة (Brand) للتفاعلات: الأزرار الأساسية والروابط بالأزرق الملكي */
+  --brand: var(--color-accent);
+  --brand-hover: var(--color-accent-hover);
+  --brand-pressed: var(--color-accent-pressed);
+  --brand-fg: var(--color-accent);
+  --brand-fg2: var(--color-accent-pressed);
+  --brand-bg2: var(--color-primary-light);
+  --on-brand: #ffffff;
+  --brand-border: var(--color-accent-soft);
+  --accent2: #b9c9b0; /* أخضر اليابسة الخافت: لمسة الإنجاز */
+
+  /* المحايد رمادي مزرق */
+  --fg1: var(--color-text);
+  --fg2: #44576a;
+  --fg3: var(--color-muted);
+  --fg4: #5f6b76;
+  --fg-disabled: #a8b1b9;
+  --bg1: #ffffff;
+  --bg1-hover: #f5f6f7;
+  --bg2: #f7f8f9;
+  --bg3: var(--color-section);
+  --bg4: #e8ebee;
+  --bg5: #dee3e7;
+  --bg-selected: var(--color-primary-light);
+  --page-bg: var(--color-background);
+  --surface-2: var(--color-section-2);
+  --stroke1: var(--color-border-strong);
+  --stroke1-hover: #adb7c0;
+  --stroke2: var(--color-border);
+  --stroke3: var(--color-border-soft);
+  --stroke-accessible: #5f6b76;
+  --focus: var(--color-accent);
+
+  /* الحالات: قيد التنفيذ بالأزرق الهادئ، ومكتمل بأخضر اليابسة الخافت، وناقص برملي، وحرج بآجري خافت */
+  --progress-bg: var(--color-primary-light);
+  --progress-fg: var(--color-accent-pressed);
+  --progress-border: var(--color-accent-soft);
+  --progress-solid: var(--color-accent);
+  --success-bg: #e9efe6;
+  --success-fg: #3d6342;
+  --success-border: #c3d3bd;
+  --success-solid: #8fac8a;
+  --warning-bg: #f6f0e1;
+  --warning-fg: #73562a;
+  --warning-border: #e0d0a6;
+  --warning-solid: #c9ab62;
+  --danger-bg: #f8ede8;
+  --danger-fg: #943b2b;
+  --danger-border: #ebd3c6;
+  --danger-solid: #bb5e4a;
+
+  /* الظلال خفيفة والزوايا محدودة */
+  --shadow4: 0 1px 2px rgba(var(--color-shadow), 0.06);
+  --shadow16: 0 8px 22px rgba(var(--color-shadow), 0.09);
+  --shadow64: 0 24px 56px rgba(var(--color-shadow), 0.22);
+  --radius-s: 2px;
+  --radius-m: 4px;
+  --radius-l: 6px;
+  --radius-xl: 8px;
+  /* حافة موحدة للأسطح: خط رفيع جدًا بدل الإطارات والظلال */
+  --ring: 0 0 0 1px rgba(var(--color-shadow), 0.07);
+  --rule: var(--color-border); /* لون الفواصل الموحد */
+
+  /* الطباعة */
+  --font: 'IBM Plex Sans Arabic', 'Segoe UI', 'Segoe UI Arabic', Tahoma, 'Noto Sans Arabic', 'Geeza Pro', system-ui,
+    -apple-system, sans-serif;
+  --t-caption: 12.5px;
+  --lh-caption: 18px;
+  --t-body: 14.5px;
+  --lh-body: 24px;
+  --t-body2: 16.5px;
+  --lh-body2: 27px;
+  --t-subtitle: 21px;
+  --lh-subtitle: 30px;
+  --t-title3: 26px;
+  --lh-title3: 36px;
+  --t-title2: 32px;
+  --lh-title2: 44px;
+  --t-h2: 22px; /* عنوان قسم */
+  --lh-h2: 32px;
+  --t-h3: 17px; /* عنوان قسم داخل سطح */
+  --lh-h3: 26px;
+  --t-hero: 46px;
+  --lh-hero: 62px;
+  --w-regular: 400;
+  --w-medium: 500;
+  --w-semibold: 600;
+  --w-bold: 700;
+
+  /* المسافات */
+  --s-xs: 4px;
+  --s-s: 8px;
+  --s-m: 12px;
+  --s-l: 16px;
+  --s-xl: 20px;
+  --s-xxl: 24px;
+  --s-xxxl: 32px;
+  --s-4xl: 48px;
+
+  /* عرض المحتوى وهوامش الصفحة */
+  --page-pad: 32px;
+  --page-max: 1200px;
+  --gap-page: 36px; /* بين أقسام الصفحة */
+  --gap-block: 20px; /* داخل القسم الواحد */
+}
+
+/* بدائل لون الأزرار الأساسية فقط، وتبقى بقية الهوية كما هي */
+:root[data-brand='fluent'] {
+  --brand: var(--color-primary);
+  --brand-hover: var(--color-primary-dark);
+  --brand-pressed: #22364a;
+}
+:root[data-brand='deep'] {
+  --brand: var(--color-accent-pressed);
+  --brand-hover: #284965;
+  --brand-pressed: #223f58;
+}
+
+/*
+  نطاق الخلفيات الداكنة: يعيد تعريف الرموز كي تعمل المكونات نفسها بنصوص فاتحة دون نسخ أنماطها.
+*/
+.on-dark {
+  --fg1: #ffffff;
+  --fg2: #e2e8ee;
+  --fg3: #c3ced8;
+  --fg4: #b4c0cb;
+  --fg-disabled: #8798a8;
+  --bg1: #405b73;
+  --bg1-hover: #48647c;
+  --bg2: #3c566d;
+  --bg3: rgba(225, 233, 240, 0.08);
+  --bg4: rgba(225, 233, 240, 0.1);
+  --bg5: rgba(225, 233, 240, 0.16);
+  --stroke1: rgba(225, 233, 240, 0.32);
+  --stroke1-hover: rgba(225, 233, 240, 0.5);
+  --stroke2: rgba(225, 233, 240, 0.14);
+  --stroke3: rgba(225, 233, 240, 0.08);
+  --stroke-accessible: #c3ced8;
+  --brand-fg: #cddcea;
+  --brand-fg2: #e1eaf2;
+  --brand-bg2: rgba(201, 216, 228, 0.18);
+  --brand-border: rgba(201, 216, 228, 0.5);
+  --focus: #ffffff;
+  --progress-bg: rgba(201, 216, 228, 0.2);
+  --progress-fg: #d5e2ed;
+  --progress-border: rgba(120, 190, 205, 0.45);
+  --success-bg: rgba(185, 201, 176, 0.16);
+  --success-fg: #d3e2cf;
+  --success-border: rgba(185, 201, 176, 0.5);
+  --warning-bg: rgba(217, 130, 43, 0.14);
+  --warning-fg: #eee0bb;
+  --warning-border: rgba(217, 130, 43, 0.45);
+  --danger-bg: rgba(196, 55, 60, 0.18);
+  --danger-fg: #f3d3c6;
+  --danger-border: rgba(255, 140, 145, 0.45);
+  color: var(--fg1);
+}
+
+/* الطبقات والأسطح: خلفية بيضاء دافئة، وأقسام رمادية فاتحة، وبطاقات بيضاء بحدود رفيعة وظل خفيف جدًا */
+:root {
+  --layer-page: var(--color-background); /* خلفية الصفحة */
+  --layer-band: var(--color-section); /* شريط فاصل بين المجموعات */
+  --surface: var(--color-surface); /* سطح المحتوى (جداول، بطاقات، نماذج) */
+  --surface-sunk: #f6f7f8; /* رؤوس الجداول وأشرطة الأدوات */
+  --line: var(--color-border); /* حد الأسطح */
+  --line-soft: var(--color-border-soft); /* الفواصل الداخلية */
+  --green-deep: var(--color-primary);
+  --green-calm: var(--color-accent);
+  --green-tint: #e9efe6;
+  --gold-tint: #faf7ee; /* عاجي فاتح جدًا للمسودات والمتوقع */
+  --gold-line: #e0d0a6;
+  --r-card: 10px;
+  --r-ctrl: 6px;
+  --elev-1: 0 1px 2px rgba(var(--color-shadow), 0.05), 0 1px 1px rgba(var(--color-shadow), 0.03);
+  --elev-2: 0 2px 6px rgba(var(--color-shadow), 0.06), 0 8px 20px rgba(var(--color-shadow), 0.05);
+  --elev-3: 0 4px 10px rgba(var(--color-shadow), 0.07), 0 16px 36px rgba(var(--color-shadow), 0.08);
+  --pad-card: 20px;
+  --t-stat: 30px;
+  --lh-stat: 38px;
+}

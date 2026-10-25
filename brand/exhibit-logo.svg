@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 120">
+  <!-- شعار المعرض (علامة + اسم). علامة خاصة بالمعرض، وليست شعارًا رسميًا للمدرسة. -->
+  <g transform="translate(452 12) scale(2)"><rect width="48" height="48" rx="10" fill="#0b6e53"/><rect x="30" y="30" width="7" height="8" rx="1.5" fill="#a6d3bb"/><rect x="20.5" y="24" width="7" height="14" rx="1.5" fill="#d3e9dd"/><rect x="11" y="18" width="7" height="20" rx="1.5" fill="#ffffff"/><circle cx="14.5" cy="10.5" r="3.4" fill="#e0b25a"/></g>
+  <text x="430" y="56" direction="rtl" text-anchor="start" font-family="'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, 'Noto Sans Arabic', sans-serif" font-size="34" font-weight="700" fill="#12271f">معرض التمكين المدرسي</text>
+  <text x="430" y="94" direction="rtl" text-anchor="start" font-family="'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, 'Noto Sans Arabic', sans-serif" font-size="20" fill="#0b6e53">للذكاء الاصطناعي والتحول الرقمي</text>
+  <rect x="370" y="104" width="60" height="3" rx="1.5" fill="#b8862b"/>
+</svg>
