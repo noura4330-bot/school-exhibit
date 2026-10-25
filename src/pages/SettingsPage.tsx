@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AddRegular, ArrowDownloadRegular, ArrowUploadRegular, DeleteRegular, LockClosedRegular } from '@fluentui/react-icons'
+import { AddRegular, ArrowDownloadRegular, ArrowUploadRegular, DeleteRegular } from '@fluentui/react-icons'
 import { makeBase, useStore } from '../data/store'
 import type { AppData, OfficialLink, Settings } from '../data/types'
 import { brandOptions } from '../data/options'
@@ -7,10 +7,9 @@ import { Message, PageHeader, Section } from '../components/ui'
 import { Drawer, useFeedback } from '../components/feedback'
 import { FormFields, validateFields, type Errors, type FieldDef } from '../components/form'
 import { RecordCollection } from '../components/records'
-import { ExtLink } from '../components/ui'
+import { DescList, ExtLink } from '../components/ui'
 import {
   blobToDataUrl,
-  clearFiles,
   dataUrlToBlob,
   deleteFile,
   listAllFiles,
@@ -19,12 +18,16 @@ import {
 } from '../lib/fileStore'
 import { downloadBlob, formatDate, todayIso } from '../lib/util'
 
+/** بيانات المدرسة والمعرض ثابتة: تُعرض للقراءة فقط ولا تُعدّل من الموقع (طلب 2026-10-25) */
+const fixedInfo: { key: keyof Settings; label: string }[] = [
+  { key: 'schoolName', label: 'اسم المدرسة' },
+  { key: 'exhibitName', label: 'اسم المعرض' },
+  { key: 'department', label: 'الإدارة التعليمية' },
+  { key: 'governorate', label: 'المحافظة' },
+  { key: 'leadName', label: 'اسم مسؤولة المبادرة' },
+]
+
 const infoFields: FieldDef[] = [
-  { key: 'schoolName', label: 'اسم المدرسة', type: 'text', required: true },
-  { key: 'exhibitName', label: 'اسم المعرض', type: 'text', required: true },
-  { key: 'department', label: 'الإدارة التعليمية', type: 'text', required: true },
-  { key: 'governorate', label: 'المحافظة', type: 'text', required: true },
-  { key: 'leadName', label: 'اسم مسؤولة المبادرة', type: 'text', required: true },
   { key: 'academicYear', label: 'السنة الدراسية', type: 'text', placeholder: 'مثال: 1448هـ' },
   { key: 'brand', label: 'لون الأزرار الأساسية', type: 'select', options: brandOptions, required: true },
   { key: 'goals', label: 'الأهداف', type: 'textarea', rows: 4 },
@@ -45,7 +48,7 @@ interface ExportFile {
 }
 
 export default function SettingsPage() {
-  const { data, setSettings, replaceAll, resetAll } = useStore()
+  const { data, setSettings, replaceAll } = useStore()
   const { toast, confirm } = useFeedback()
   const [draft, setDraft] = useState<Settings>(data.settings)
   const [errors, setErrors] = useState<Errors>({})
@@ -65,10 +68,7 @@ export default function SettingsPage() {
       toast('تعذر الحفظ. راجعي الحقول المطلوبة.', 'error')
       return
     }
-    const { links: _links, logoFileId: _logo, ...rest } = draft
-    void _links
-    void _logo
-    setSettings(rest)
+    setSettings({ academicYear: draft.academicYear, brand: draft.brand, goals: draft.goals })
     toast('تم حفظ الإعدادات.')
   }
 
@@ -133,7 +133,9 @@ export default function SettingsPage() {
           await putRawFile({ id: f.id, name: f.name, type: f.type, size: f.size, addedAt: f.addedAt, blob })
         }
       }
-      replaceAll(parsed.data)
+      // بيانات المدرسة والمعرض الثابتة لا تتغير بالاستيراد
+      const fixed = Object.fromEntries(fixedInfo.map((f) => [f.key, data.settings[f.key]]))
+      replaceAll({ ...parsed.data, settings: { ...parsed.data.settings, ...fixed } })
       toast('تم استيراد البيانات.')
     } catch (e) {
       toast(`تعذر الاستيراد: ${(e as Error).message}`, 'error')
@@ -143,25 +145,16 @@ export default function SettingsPage() {
     }
   }
 
-  const reset = async () => {
-    const ok = await confirm({
-      title: 'حذف كل البيانات والعودة إلى بيانات البداية؟',
-      body: 'ستُحذف كل السجلات والملفات المحفوظة في هذا المتصفح نهائيًا. صدّري نسخة احتياطية أولًا إن كنت تحتاجين البيانات.',
-      confirmLabel: 'حذف كل البيانات',
-      danger: true,
-    })
-    if (!ok) return
-    await clearFiles().catch(() => undefined)
-    resetAll()
-    toast('أُعيد المعرض إلى بيانات البداية.')
-  }
-
   return (
     <>
       <PageHeader title="الإعدادات والأمان" lead="بيانات المدرسة والهوية، والمراجع الرسمية، والنسخ الاحتياطي، وإرشادات حماية البيانات." />
 
+      <Section title="بيانات المدرسة والمعرض" sub="بيانات ثابتة للعرض فقط، ولا يمكن تعديلها من الموقع">
+        <DescList items={fixedInfo.map((f) => ({ label: f.label, value: String(data.settings[f.key] ?? '') }))} />
+      </Section>
+
       <Section
-        title="بيانات المدرسة والمعرض"
+        title="السنة الدراسية والعرض"
         actions={
           <button className="btn primary" onClick={saveInfo}>
             حفظ
@@ -252,13 +245,6 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      <Section title="منطقة الخطر">
-        <div className="row">
-          <button className="btn danger" onClick={() => void reset()}>
-            <LockClosedRegular /> حذف كل البيانات والعودة إلى بيانات البداية
-          </button>
-        </div>
-      </Section>
       {linkCrud.node}
     </>
   )
