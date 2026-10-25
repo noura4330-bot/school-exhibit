@@ -20,7 +20,7 @@ export type Role = 'pending' | 'admin' | 'editor' | 'supervisor' | 'revoked'
 export const roleLabels: Record<Role, string> = {
   admin: 'مديرة النظام',
   editor: 'مستخدم مصرّح له بالتعديل',
-  supervisor: 'مشرفة (اطلاع فقط)',
+  supervisor: 'اطلاع فقط (المشرفة والمستخدمون)',
   pending: 'بانتظار منح الصلاحية',
   revoked: 'صلاحية ملغاة',
 }

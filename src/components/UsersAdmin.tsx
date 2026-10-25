@@ -15,7 +15,9 @@ interface ProfileRow {
   created_at: string
 }
 
-const roleOrder: Role[] = ['admin', 'editor', 'supervisor', 'pending', 'revoked']
+// بطلب المديرة (2026-10-25): المشرفة والمستخدمون للاطلاع فقط، والتعديل للمديرة وحدها،
+// فلا يُعرض دور «مستخدم مصرّح له بالتعديل» للاختيار (يبقى ظاهرًا لحساب يحمله سابقًا)
+const roleOrder: Role[] = ['supervisor', 'pending', 'revoked', 'admin']
 const tone: Record<Role, 'brand' | 'success' | 'warning' | 'danger' | 'neutral'> = {
   admin: 'brand',
   editor: 'success',
@@ -72,7 +74,7 @@ export function UsersAdmin({ me }: { me: CloudUser }) {
   return (
     <Section
       title="المستخدمون والصلاحيات"
-      sub="لمديرة النظام فقط. يُنشئ كل شخص حسابه من صفحة الدخول، فيظهر هنا «بانتظار منح الصلاحية» حتى تحددي دوره"
+      sub="لمديرة النظام فقط. يُنشئ كل شخص حسابه من صفحة الدخول، فيظهر هنا «بانتظار منح الصلاحية» حتى تمنحيه «اطلاع فقط»"
       actions={
         <button className="btn small" onClick={() => void load()}>
           تحديث القائمة
@@ -115,7 +117,7 @@ export function UsersAdmin({ me }: { me: CloudUser }) {
                         disabled={busy === u.id}
                         onChange={(e) => void change(u, e.target.value as Role)}
                       >
-                        {roleOrder.map((r) => (
+                        {(roleOrder.includes(u.role) ? roleOrder : [u.role, ...roleOrder]).map((r) => (
                           <option key={r} value={r}>
                             {roleLabels[r]}
                           </option>
@@ -130,8 +132,8 @@ export function UsersAdmin({ me }: { me: CloudUser }) {
         </div>
       )}
       <div className="caption" style={{ padding: '12px 16px' }}>
-        المشرفة: اطلاع على كل البيانات والتقارير والشواهد دون تعديل أو حذف. المستخدم المصرّح له: إضافة وتعديل وحذف. مديرة النظام: كل ذلك مع
-        إدارة الصلاحيات.
+        «اطلاع فقط» للمشرفة والمستخدمين: يرون كل البيانات والتقارير والشواهد وينزّلون الملفات، دون إضافة أو تعديل أو حذف. مديرة النظام وحدها
+        تعدّل وتدير الصلاحيات.
       </div>
     </Section>
   )
