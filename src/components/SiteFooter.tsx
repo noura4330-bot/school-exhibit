@@ -5,7 +5,7 @@ import { href } from '../lib/router'
 const links = [
   { route: 'initiative', label: 'ملف المبادرة' },
   { route: 'evidence', label: 'الشواهد والأدلة' },
-  { route: 'reports', label: 'التقارير' },
+  { route: 'impact', label: 'قياس الأثر' },
   { route: 'settings', label: 'الخصوصية وحماية البيانات' },
 ]
 

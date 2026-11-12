@@ -136,17 +136,17 @@ export default function ImpactPage() {
   const active = new Set(data.impact.map((m) => m.title))
   return (
     <>
-      <PageHeader
-        title="قياس الأثر"
-        lead="لكل مؤشر خط أساس ومستهدف ونتيجة فعلية، مع طريقة القياس ومصدره."
-        actions={
-          <button className="btn primary edit-only" onClick={() => crud.openNew(create())}>
-            <AddRegular /> إضافة مؤشر أثر
-          </button>
-        }
-      />
+      <PageHeader title="قياس الأثر" lead="مؤشرات قياس أثر كل برنامج من برامج الشواهد: المستهدف والنتيجة الفعلية ووصف مختصر للنتيجة." />
       <ProgramMeasures />
 
+      {/* مؤشرات الأثر العامة السابقة: خارج نطاق شواهد البرامج، فتبقى بياناتها مطوية لمديرة النظام فقط (2026-11-12) */}
+      <details className="legacy-impact edit-only">
+        <summary>مؤشرات الأثر العامة السابقة ({data.impact.length})</summary>
+        <div className="row" style={{ margin: '12px 0' }}>
+          <button className="btn edit-only" onClick={() => crud.openNew(create())}>
+            <AddRegular /> إضافة مؤشر أثر عام
+          </button>
+        </div>
       <Message tone="info">الرسوم تُبنى من القيم المدخلة فقط، ولا يُنسب التحسن إلى المبادرة ما لم يسمح أسلوب القياس بذلك.</Message>
 
       {impactExamples.some((ex) => !active.has(ex.title)) ? (
@@ -260,6 +260,7 @@ export default function ImpactPage() {
           })}
         </div>
       )}
+      </details>
       {crud.node}
     </>
   )

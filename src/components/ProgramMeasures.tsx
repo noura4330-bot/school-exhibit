@@ -218,8 +218,30 @@ function MeasureTable({ list, onEdit, onDelete }: { list: ProgramMeasure[]; onEd
 export function ProgramImpactOverview() {
   const { data } = useStore()
   const crud = useMeasureCrud()
+  const ini = data.initiative
+  const first = (t?: string) => (t ?? '').split('\n').map((x) => x.trim()).find(Boolean) ?? ''
   return (
     <>
+      <dl className="ini-stages3 pi-summary">
+        <div className="b">
+          <dt>خط الأساس</dt>
+          <dd>
+            <Value v={first(ini.baseline)} />
+          </dd>
+        </div>
+        <div className="t">
+          <dt>المستهدف</dt>
+          <dd>
+            <Value v={first(ini.target)} />
+          </dd>
+        </div>
+        <div className="a">
+          <dt>النتيجة الفعلية</dt>
+          <dd>
+            <Value v={first(ini.actualResults)} empty="لم تُسجل نتائج فعلية بعد" />
+          </dd>
+        </div>
+      </dl>
       <p className="ipf-lead">
         مؤشرات قياس الأثر هي عناصر الشواهد نفسها في كل برنامج. يظهر عدد الشواهد الموثقة لكل عنصر تلقائيًا، ويظهر المستهدف والنتيجة الفعلية متى سُجلا.
       </p>
