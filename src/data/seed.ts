@@ -8,7 +8,7 @@ import { applyImpactV13 } from './impactV13'
 import { applyPlanV14 } from './planV14'
 import { evaluationDefaults, followUpTaskRecords, plannedActivityRecords, seedTaskDetails } from './planContent'
 
-export const DATA_VERSION = 17
+export const DATA_VERSION = 18
 
 /** ملاحظة مرجع Fluent؛ القديمة تُستبدل عند الترحيل إن لم تُعدَّل */
 export const FLUENT_NOTE = 'مرجع التصميم للمسافات والطباعة. الألوان الزمردية هوية خاصة بالمعرض.'
