@@ -1,4 +1,4 @@
-// مؤشرات قياس أثر البرامج الثمانية: لكل برنامج مؤشر أو أكثر (المؤشر، المستهدف، النتيجة الفعلية، وصف مختصر)
+// مؤشرات قياس أثر البرامج: لكل برنامج مؤشر أو أكثر (المؤشر، المستهدف، النتيجة الفعلية، وصف مختصر)
 import { AddRegular, DeleteRegular, EditRegular } from '@fluentui/react-icons'
 import { makeBase, useStore } from '../data/store'
 import type { ProgramMeasure } from '../data/types'

@@ -1,4 +1,4 @@
-// شواهد البرامج الثمانية: اختيار البرنامج ونوع الشاهد ورفع 4 إلى 6 صور، والوصف يُملأ تلقائيًا.
+// شواهد البرامج: اختيار البرنامج ونوع الشاهد ورفع 4 إلى 6 صور، والوصف يُملأ تلقائيًا.
 // تُحفظ في مجموعة الشواهد نفسها (evidence) مع programId وprogramKind، فتشملها النسخ الاحتياطية والحذف والتقارير.
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -7,6 +7,7 @@ import {
   ChevronRightRegular,
   DeleteRegular,
   DismissRegular,
+  DocumentPdfRegular,
   EditRegular,
   ImageRegular,
 } from '@fluentui/react-icons'
@@ -16,9 +17,11 @@ import { kindOf, MAX_IMAGES, MIN_IMAGES, programById, programs, type ProgramDef 
 import { deleteFile, saveFile } from '../lib/fileStore'
 import { shrinkImage } from '../lib/imageShrink'
 import { Drawer, Modal, useFeedback } from './feedback'
-import { FieldShell } from './form'
+import { AttachmentList, FieldShell } from './form'
+import { href } from '../lib/router'
 import { blankEvidence, useImageUrl } from './EvidenceGallery'
 
+const POLICY_ID = 'policy'
 const isImage = (a: Attachment) => a.type.startsWith('image/')
 export const imagesOf = (e: Evidence) => e.files.filter(isImage)
 /** وصف الشاهد: الوصف الجاهز لنوعه، وإلا المحفوظ في السجل */
@@ -319,7 +322,7 @@ function ProgramCard({ p, n, count, cover, active, onOpen }: { p: ProgramDef; n:
   )
 }
 
-/** بطاقات البرامج الثمانية، وعند فتح أحدها تظهر شواهده وصوره تحته */
+/** بطاقات البرامج، وعند فتح أحدها تظهر شواهده وصوره تحته */
 export function ProgramsBoard({ focusId, onDone }: { focusId?: string; onDone?: () => void }) {
   const { data, remove } = useStore()
   const { confirm, toast } = useFeedback()
@@ -343,6 +346,9 @@ export function ProgramsBoard({ focusId, onDone }: { focusId?: string; onDone?: 
   const byProgram = (id: string) =>
     data.evidence.filter((e) => e.programId === id).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   const open = programs.find((p) => p.id === openId)
+  // ملف السياسة وتقرير التحقق من وثيقة الحوكمة نفسها، فيبقى مصدرهما واحدًا ويتحدثان معًا
+  const policyDoc = data.govDocs[0]
+  const policyFiles = policyDoc ? [...policyDoc.files, ...(policyDoc.companionFiles ?? [])] : []
   const openList = open ? byProgram(open.id) : []
 
   useEffect(() => {
@@ -378,7 +384,51 @@ export function ProgramsBoard({ focusId, onDone }: { focusId?: string; onDone?: 
             <ProgramCard key={p.id} p={p} n={n} count={list.length} cover={cover} active={openId === p.id} onOpen={() => setOpenId(openId === p.id ? null : p.id)} />
           )
         })}
+        <li>
+          <button
+            className={`pe-card${openId === POLICY_ID ? ' active' : ''}`}
+            onClick={() => setOpenId(openId === POLICY_ID ? null : POLICY_ID)}
+            aria-expanded={openId === POLICY_ID}
+            aria-controls="pe-panel"
+          >
+            <span className="pe-cover pe-cover-doc">
+              <DocumentPdfRegular aria-hidden />
+            </span>
+            <span className="pe-card-body">
+              <span className="pe-card-name">سياسة الاستخدام والحوكمة</span>
+              <span className="pe-card-sum">وثيقة سياسة الاستخدام المسؤول للذكاء الاصطناعي وحوكمته في المدرسة، ملفًا قابلًا للفتح والتنزيل.</span>
+              <span className={`pe-count${policyFiles.length ? ' has' : ''}`}>{policyFiles.length ? `${policyFiles.length === 1 ? 'ملف واحد' : policyFiles.length === 2 ? 'ملفان' : `${policyFiles.length} ملفات`} PDF` : 'لا ملف بعد'}</span>
+            </span>
+          </button>
+        </li>
       </ul>
+
+      {openId === POLICY_ID && (
+        <div className="pe-panel" id="pe-panel" ref={panelRef} role="region" aria-labelledby="pe-panel-title">
+          <div className="pe-panel-head">
+            <div>
+              <h3 id="pe-panel-title">سياسة الاستخدام والحوكمة</h3>
+              <p className="pe-panel-sum">{policyDoc?.title ?? 'وثيقة السياسة'}</p>
+            </div>
+            <div className="row" style={{ flexWrap: 'nowrap' }}>
+              <a className="btn edit-only" href={href('governance', 'manage')}>
+                <EditRegular /> تحديث ملف السياسة
+              </a>
+              <button className="btn subtle icon" aria-label="إغلاق" onClick={() => setOpenId(null)}>
+                <DismissRegular />
+              </button>
+            </div>
+          </div>
+          {policyFiles.length ? (
+            <div className="pe-doc">
+              <AttachmentList items={policyFiles} />
+              <p className="caption">اضغطي زر الفتح لعرض الملف، أو زر التنزيل لحفظه على جهازك.</p>
+            </div>
+          ) : (
+            <p className="muted pe-empty">لم يُرفع ملف السياسة بعد.</p>
+          )}
+        </div>
+      )}
 
       {open && (
         <div className="pe-panel" id="pe-panel" ref={panelRef} role="region" aria-labelledby="pe-panel-title">

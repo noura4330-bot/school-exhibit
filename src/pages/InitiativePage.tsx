@@ -641,7 +641,7 @@ export default function InitiativePage() {
         )}
       </section>
 
-      {/* ===== 06 البرامج الثمانية وشواهدها ===== */}
+      {/* ===== 06 البرامج وشواهدها ===== */}
       <section className="ini-sec" id="ini-evidence" aria-labelledby="ini-evidence-title">
         <SecHead
           n="06"

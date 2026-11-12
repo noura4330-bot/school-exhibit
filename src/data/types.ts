@@ -261,12 +261,12 @@ export interface Evidence extends BaseRecord {
   visibleProof: string
   needsCompletion: 'yes' | 'no' | ''
   hasPersonalData: 'yes' | 'no' | ''
-  /** البرنامج ونوع الشاهد من قائمة البرامج الثمانية (src/data/programs.ts)؛ فارغان للشواهد القديمة */
+  /** البرنامج ونوع الشاهد من قائمة البرامج (src/data/programs.ts)؛ فارغان للشواهد القديمة */
   programId?: string
   programKind?: string
 }
 
-/** مؤشر قياس أثر لأحد البرامج الثمانية */
+/** مؤشر قياس أثر لأحد البرامج */
 export interface ProgramMeasure extends BaseRecord {
   programId: string
   title: string

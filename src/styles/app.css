@@ -8023,7 +8023,7 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
   }
 }
 
-/* ===== البرامج الثمانية وشواهدها ===== */
+/* ===== البرامج وشواهدها ===== */
 .pe-cards {
   list-style: none;
   margin: 0;
@@ -8374,4 +8374,23 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
   .pe-item-head .row {
     display: none;
   }
+}
+.pe-cover-doc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--danger-fg, #b42318);
+  font-weight: var(--w-bold);
+}
+.pe-cover-doc svg {
+  width: 48px;
+  height: 48px;
+}
+.pe-doc {
+  margin-top: var(--s-l);
+  display: grid;
+  gap: var(--s-s);
+  max-width: 640px;
 }

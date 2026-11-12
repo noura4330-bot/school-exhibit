@@ -1,4 +1,4 @@
-// ملف الشواهد: شواهد البرامج الثمانية، ثم الشواهد السابقة غير المرتبطة ببرنامج إن وُجدت
+// ملف الشواهد: شواهد البرامج، ثم الشواهد السابقة غير المرتبطة ببرنامج إن وُجدت
 import { useStore } from '../data/store'
 import { PageHeader, Section } from '../components/ui'
 import { EvidenceGallery } from '../components/EvidenceGallery'
@@ -11,7 +11,7 @@ export default function EvidencePage({ focusId }: { focusId: string }) {
   const legacyFocus = focusId && data.evidence.some((e) => e.id === focusId && legacy(e)) ? focusId : undefined
   return (
     <>
-      <PageHeader title="الشواهد والأدلة" lead="شواهد البرامج الثمانية مصنفة حسب البرنامج، مع وصف كل شاهد وصوره." />
+      <PageHeader title="الشواهد والأدلة" lead="شواهد برامج المبادرة مصنفة حسب البرنامج، مع وصف كل شاهد وصوره." />
       <ProgramsBoard focusId={legacyFocus ? undefined : focusId || undefined} onDone={() => focusId === 'new' && navigate('evidence')} />
       {data.evidence.some(legacy) && (
         <Section title="شواهد سابقة" sub="شواهد أُضيفت قبل نظام البرامج، ويمكن تعديلها أو حذفها.">
