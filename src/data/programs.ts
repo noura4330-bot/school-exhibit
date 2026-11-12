@@ -145,5 +145,6 @@ export const programs: ProgramDef[] = [
 export const programById = (id?: string) => programs.find((p) => p.id === id)
 export const kindOf = (programId?: string, kindId?: string) => programById(programId)?.kinds.find((k) => k.id === kindId)
 
-export const MIN_IMAGES = 4
-export const MAX_IMAGES = 6
+// صورة واحدة أو أكثر للشاهد (طلب مديرة النظام 2026-11-12؛ كان من 4 إلى 6)، مع حد أعلى يحفظ سرعة الصفحة
+export const MIN_IMAGES = 1
+export const MAX_IMAGES = 12

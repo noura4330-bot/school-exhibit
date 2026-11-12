@@ -108,7 +108,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
     const files = Array.from(list).filter((f) => f.type.startsWith('image/'))
     if (files.length < list.length) toast('تُقبل ملفات الصور فقط، وتُرك غيرها.', 'error')
     const room = MAX_IMAGES - images.length
-    if (files.length > room) toast(`الحد الأعلى ${MAX_IMAGES} صور للشاهد؛ أُضيفت ${Math.max(room, 0)} فقط.`, 'error')
+    if (files.length > room) toast(`الحد الأعلى ${MAX_IMAGES} صورة للشاهد؛ أُضيفت ${Math.max(room, 0)} فقط.`, 'error')
     const take = files.slice(0, Math.max(room, 0))
     if (inputRef.current) inputRef.current.value = ''
     if (!take.length) return
@@ -140,8 +140,8 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
     const errs: typeof errors = {}
     if (!program) errs.program = 'اختاري البرنامج.'
     if (!kind) errs.kind = 'اختاري نوع الشاهد.'
-    if (images.length < MIN_IMAGES || images.length > MAX_IMAGES)
-      errs.images = `ارفعي من ${MIN_IMAGES} إلى ${MAX_IMAGES} صور للشاهد (المرفوع الآن ${images.length}).`
+    if (images.length < MIN_IMAGES) errs.images = 'ارفعي صورة واحدة على الأقل للشاهد.'
+    else if (images.length > MAX_IMAGES) errs.images = `الحد الأعلى ${MAX_IMAGES} صورة للشاهد (المرفوع الآن ${images.length}).`
     if (errs.program || errs.kind || errs.images) {
       setErrors(errs)
       return
@@ -225,7 +225,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
             {kind ? kind.description : <span className="muted">يظهر الوصف تلقائيًا عند اختيار نوع الشاهد.</span>}
           </p>
         </div>
-        <FieldShell id="pe-images" label={`صور الشاهد (من ${MIN_IMAGES} إلى ${MAX_IMAGES})`} required error={errors.images} full>
+        <FieldShell id="pe-images" label={`صور الشاهد (صورة واحدة أو أكثر، حتى ${MAX_IMAGES})`} required error={errors.images} full>
           <div className="pe-upload">
             {images.length > 0 && (
               <ul className="pe-thumbs">
