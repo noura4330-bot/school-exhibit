@@ -1,4 +1,4 @@
-// ملف المبادرة في ستة تبويبات على هيئة بطاقات، ومحتوى التبويب المحدد في مساحة واحدة أسفلها.
+// ملف المبادرة في ثمانية تبويبات على هيئة بطاقات، ومحتوى التبويب المحدد في مساحة واحدة أسفلها.
 // المحتوى من حقول الملف المسجلة فقط؛ الحقل الفارغ يُذكر في سطر «لم يُسجل بعد» ولا يُملأ بتخمين.
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { EditRegular } from '@fluentui/react-icons'
@@ -15,8 +15,14 @@ const tabs = [
   { key: 'why', title: 'المبررات والمشكلة' },
   { key: 'roles', title: 'الفئات المستهدفة والأدوار' },
   { key: 'scope', title: 'النطاق والمخرجات المتوقعة' },
+  { key: 'plan', title: 'خطة التنفيذ' },
+  { key: 'impact', title: 'مؤشرات قياس الأثر' },
 ] as const
-type TabKey = (typeof tabs)[number]['key']
+export type TabKey = (typeof tabs)[number]['key']
+
+const OPEN_EVENT = 'ipf-open'
+/** فتح تبويب من خارج الملف (مثل أزرار الواجهة الافتتاحية) */
+export const openProfileTab = (key: TabKey) => window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: key }))
 
 const STORE_KEY = 'ini-profile-tab'
 const readTab = (): TabKey => {
@@ -45,7 +51,7 @@ function Missing({ items, onEdit }: { items: [string, string | undefined][]; onE
 }
 
 /** وحدة محتوى ظاهرة دائمًا: رقم وعنوان فرعي ثم النص */
-function Block({ n, title, children }: { n: string; title: string; children: ReactNode }) {
+export function Block({ n, title, children }: { n: string; title: string; children: ReactNode }) {
   return (
     <section className="ipf-block">
       <h4>
@@ -81,7 +87,21 @@ function roleOf(text: string, test: RegExp): string {
   return l ? splitLead(l)[1] : ''
 }
 
-export function IniProfile({ ini, settings, purpose, onEdit }: { ini: InitiativeProfile; settings: Settings; purpose: string; onEdit: () => void }) {
+export function IniProfile({
+  ini,
+  settings,
+  purpose,
+  onEdit,
+  plan,
+  impact,
+}: {
+  ini: InitiativeProfile
+  settings: Settings
+  purpose: string
+  onEdit: () => void
+  plan: ReactNode
+  impact: ReactNode
+}) {
   const [tab, setTab] = useState<TabKey>(readTab)
   const btns = useRef<(HTMLButtonElement | null)[]>([])
   useEffect(() => {
@@ -91,6 +111,14 @@ export function IniProfile({ ini, settings, purpose, onEdit }: { ini: Initiative
       /* التبويب المحفوظ ميزة اختيارية */
     }
   }, [tab])
+  useEffect(() => {
+    const on = (e: Event) => {
+      const k = (e as CustomEvent<string>).detail
+      if (tabs.some((t) => t.key === k)) setTab(k as TabKey)
+    }
+    window.addEventListener(OPEN_EVENT, on)
+    return () => window.removeEventListener(OPEN_EVENT, on)
+  }, [])
   const go = (k: TabKey) => setTab(k)
   const onKey = (e: KeyboardEvent, i: number) => {
     // في RTL: السهم الأيسر يتقدم والأيمن يرجع
@@ -378,6 +406,18 @@ export function IniProfile({ ini, settings, purpose, onEdit }: { ini: Initiative
           ]}
           onEdit={onEdit}
         />
+      </div>
+
+      {/* 07 خطة التنفيذ */}
+      <div className="ipf-panel" role="tabpanel" id="ipf-panel-plan" aria-labelledby="ipf-tab-plan" hidden={tab !== 'plan'}>
+        <PanelHead i={6} />
+        {plan}
+      </div>
+
+      {/* 08 مؤشرات قياس الأثر */}
+      <div className="ipf-panel" role="tabpanel" id="ipf-panel-impact" aria-labelledby="ipf-tab-impact" hidden={tab !== 'impact'}>
+        <PanelHead i={7} />
+        {impact}
       </div>
     </div>
   )

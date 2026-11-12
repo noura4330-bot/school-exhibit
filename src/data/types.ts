@@ -269,6 +269,8 @@ export interface Evidence extends BaseRecord {
 /** مؤشر قياس أثر لأحد البرامج */
 export interface ProgramMeasure extends BaseRecord {
   programId: string
+  /** نوع الشاهد الذي يقيسه المؤشر (من أنواع شواهد البرنامج)؛ فارغ للمؤشرات المكتوبة يدويًا سابقًا */
+  kindId?: string
   title: string
   target: string
   actual: string

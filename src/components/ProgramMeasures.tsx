@@ -1,34 +1,132 @@
-// مؤشرات قياس أثر البرامج: لكل برنامج مؤشر أو أكثر (المؤشر، المستهدف، النتيجة الفعلية، وصف مختصر)
+// مؤشرات قياس أثر البرامج: كل مؤشر مبني على أحد أنواع الشواهد في برنامجه (العناصر نفسها في نظام الشواهد)،
+// مع المستهدف والنتيجة الفعلية ووصف مختصر. تُعرض في صفحة «قياس الأثر» وفي تبويب «مؤشرات قياس الأثر» بملف المبادرة.
+import { useState } from 'react'
 import { AddRegular, DeleteRegular, EditRegular } from '@fluentui/react-icons'
 import { makeBase, useStore } from '../data/store'
 import type { ProgramMeasure } from '../data/types'
-import { programById, programs } from '../data/programs'
-import { useCrud, type EditorConfig } from './records'
-import type { FieldDef } from './form'
+import { kindOf, programById, programs } from '../data/programs'
+import { href } from '../lib/router'
+import { Drawer, useFeedback } from './feedback'
+import { FieldShell } from './form'
 import { Section, Value } from './ui'
 
-const fields: FieldDef[] = [
-  { key: 'programId', label: 'اسم البرنامج', type: 'select', required: true, full: true, options: programs.map((p, n) => ({ value: p.id, label: `${n + 1}. ${p.name}` })) },
-  { key: 'title', label: 'مؤشر القياس', type: 'text', required: true, full: true, hint: 'مثل: نسبة الطالبات المتدربات على المنصة.' },
-  { key: 'target', label: 'المستهدف', type: 'text' },
-  { key: 'actual', label: 'النتيجة الفعلية', type: 'text' },
-  { key: 'notes', label: 'وصف مختصر للنتيجة', type: 'textarea', rows: 3, full: true },
-]
+/** اسم المؤشر: نوع الشاهد الذي يقيسه، وإلا العنوان المكتوب سابقًا */
+export const measureTitle = (m: ProgramMeasure) => kindOf(m.programId, m.kindId)?.label ?? m.title
 
-const config: EditorConfig<ProgramMeasure> = { title: 'مؤشر قياس', fields }
+const blank = (programId = '', kindId = ''): ProgramMeasure => ({ ...makeBase(), programId, kindId, title: '', target: '', actual: '', notes: '' })
 
+function MeasureEditor({ initial, isNew, onClose }: { initial: ProgramMeasure; isNew: boolean; onClose: () => void }) {
+  const { upsert } = useStore()
+  const { toast } = useFeedback()
+  const [d, setD] = useState(initial)
+  const [errors, setErrors] = useState<{ program?: string; kind?: string }>({})
+  const program = programById(d.programId)
+  const kind = kindOf(d.programId, d.kindId)
+  const set = (patch: Partial<ProgramMeasure>) => setD((x) => ({ ...x, ...patch }))
+
+  const save = () => {
+    const errs: typeof errors = {}
+    if (!program) errs.program = 'اختاري البرنامج.'
+    if (!kind && !d.title.trim()) errs.kind = 'اختاري المؤشر.'
+    if (errs.program || errs.kind) return setErrors(errs)
+    upsert('programMeasures', { ...d, title: kind?.label ?? d.title, target: d.target.trim(), actual: d.actual.trim(), notes: d.notes.trim() })
+    toast(isNew ? 'تمت إضافة المؤشر.' : 'تم حفظ المؤشر.')
+    onClose()
+  }
+
+  return (
+    <Drawer
+      title={isNew ? 'إضافة مؤشر قياس' : 'تعديل مؤشر القياس'}
+      onClose={onClose}
+      footer={
+        <>
+          <button className="btn" onClick={onClose}>
+            إلغاء
+          </button>
+          <button className="btn primary edit-only" onClick={save}>
+            حفظ
+          </button>
+        </>
+      }
+    >
+      <div className="form-grid">
+        <FieldShell id="pm-program" label="اسم البرنامج" required error={errors.program} full>
+          <select
+            id="pm-program"
+            className="select"
+            value={d.programId}
+            onChange={(e) => {
+              set({ programId: e.target.value, kindId: '', title: '' })
+              setErrors({})
+            }}
+          >
+            <option value="">اختاري البرنامج</option>
+            {programs.map((p, n) => (
+              <option key={p.id} value={p.id}>
+                {n + 1}. {p.name}
+              </option>
+            ))}
+          </select>
+        </FieldShell>
+        <FieldShell id="pm-kind" label="مؤشر القياس" required error={errors.kind} full hint="المؤشرات هي أنواع الشواهد نفسها في البرنامج.">
+          <select
+            id="pm-kind"
+            className="select"
+            value={kind ? d.kindId : ''}
+            disabled={!program}
+            onChange={(e) => {
+              set({ kindId: e.target.value })
+              setErrors((x) => ({ ...x, kind: undefined }))
+            }}
+          >
+            <option value="">{program ? (!kind && d.title ? `${d.title} (مؤشر سابق)` : 'اختاري المؤشر') : 'اختاري البرنامج أولًا'}</option>
+            {program?.kinds.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+        </FieldShell>
+        <FieldShell id="pm-target" label="المستهدف">
+          <input id="pm-target" className="input" value={d.target} onChange={(e) => set({ target: e.target.value })} />
+        </FieldShell>
+        <FieldShell id="pm-actual" label="النتيجة الفعلية">
+          <input id="pm-actual" className="input" value={d.actual} onChange={(e) => set({ actual: e.target.value })} />
+        </FieldShell>
+        <FieldShell id="pm-notes" label="وصف مختصر للنتيجة" full>
+          <textarea id="pm-notes" className="input" rows={3} value={d.notes} onChange={(e) => set({ notes: e.target.value })} />
+        </FieldShell>
+      </div>
+    </Drawer>
+  )
+}
+
+function useMeasureCrud() {
+  const { remove } = useStore()
+  const { confirm, toast } = useFeedback()
+  const [editing, setEditing] = useState<{ m: ProgramMeasure; isNew: boolean } | null>(null)
+  const askDelete = async (m: ProgramMeasure) => {
+    const ok = await confirm({ title: 'حذف المؤشر؟', body: `سيُحذف مؤشر «${measureTitle(m)}» وقيمه.`, confirmLabel: 'حذف', danger: true })
+    if (!ok) return
+    await remove('programMeasures', m.id)
+    toast('تم حذف المؤشر.')
+  }
+  const node = editing && <MeasureEditor initial={editing.m} isNew={editing.isNew} onClose={() => setEditing(null)} />
+  return { node, openNew: (m: ProgramMeasure) => setEditing({ m, isNew: true }), openEdit: (m: ProgramMeasure) => setEditing({ m, isNew: false }), askDelete }
+}
+
+/** قسم صفحة «قياس الأثر»: مؤشرات كل برنامج في جدول */
 export function ProgramMeasures() {
   const { data } = useStore()
-  const crud = useCrud<ProgramMeasure>('programMeasures', config, (m) => m.title)
-  const create = (programId = ''): ProgramMeasure => ({ ...makeBase(), programId, title: '', target: '', actual: '', notes: '' })
+  const crud = useMeasureCrud()
   const orphan = data.programMeasures.filter((m) => !programById(m.programId))
 
   return (
     <Section
       title="مؤشرات قياس أثر البرامج"
-      sub="لكل برنامج مؤشر قياس أو أكثر، مع المستهدف والنتيجة الفعلية."
+      sub="مؤشرات كل برنامج هي أنواع شواهده نفسها، ولكل مؤشر مستهدف ونتيجة فعلية."
       actions={
-        <button className="btn primary edit-only" onClick={() => crud.openNew(create())}>
+        <button className="btn primary edit-only" onClick={() => crud.openNew(blank())}>
           <AddRegular /> إضافة مؤشر
         </button>
       }
@@ -45,7 +143,7 @@ export function ProgramMeasures() {
                   </span>
                   {p.name}
                 </h3>
-                <button className="btn small edit-only" onClick={() => crud.openNew(create(p.id))} aria-label={`إضافة مؤشر لبرنامج ${p.name}`}>
+                <button className="btn small edit-only" onClick={() => crud.openNew(blank(p.id))} aria-label={`إضافة مؤشر لبرنامج ${p.name}`}>
                   <AddRegular /> إضافة مؤشر
                 </button>
               </header>
@@ -90,21 +188,21 @@ function MeasureTable({ list, onEdit, onDelete }: { list: ProgramMeasure[]; onEd
         <tbody>
           {list.map((m) => (
             <tr key={m.id}>
-              <td data-label="مؤشر القياس">{m.title}</td>
-              <td data-label="المستهدف">
+              <td>{measureTitle(m)}</td>
+              <td>
                 <Value v={m.target} empty="لم يُحدد" />
               </td>
-              <td data-label="النتيجة الفعلية">
+              <td>
                 <Value v={m.actual} empty="لم تُقس بعد" />
               </td>
-              <td data-label="وصف النتيجة" className="pre-line">
+              <td className="pre-line">
                 <Value v={m.notes} />
               </td>
               <td className="actions no-print edit-only">
-                <button className="btn subtle small icon" aria-label={`تعديل ${m.title}`} title="تعديل" onClick={() => onEdit(m)}>
+                <button className="btn subtle small icon" aria-label={`تعديل ${measureTitle(m)}`} title="تعديل" onClick={() => onEdit(m)}>
                   <EditRegular />
                 </button>
-                <button className="btn subtle small icon danger" aria-label={`حذف ${m.title}`} title="حذف" onClick={() => onDelete(m)}>
+                <button className="btn subtle small icon danger" aria-label={`حذف ${measureTitle(m)}`} title="حذف" onClick={() => onDelete(m)}>
                   <DeleteRegular />
                 </button>
               </td>
@@ -112,6 +210,87 @@ function MeasureTable({ list, onEdit, onDelete }: { list: ProgramMeasure[]; onEd
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+/** تبويب «مؤشرات قياس الأثر» في ملف المبادرة: لكل برنامج عناصر شواهده، مع عدد الشواهد الموثقة وقيم القياس إن سُجلت */
+export function ProgramImpactOverview() {
+  const { data } = useStore()
+  const crud = useMeasureCrud()
+  return (
+    <>
+      <p className="ipf-lead">
+        مؤشرات قياس الأثر هي عناصر الشواهد نفسها في كل برنامج. يظهر عدد الشواهد الموثقة لكل عنصر تلقائيًا، ويظهر المستهدف والنتيجة الفعلية متى سُجلا.
+      </p>
+      <div className="ipf-blocks pi-blocks">
+        {programs.map((p, n) => {
+          const ev = data.evidence.filter((e) => e.programId === p.id)
+          const ms = data.programMeasures.filter((m) => m.programId === p.id)
+          const extra = ms.filter((m) => !p.kinds.some((k) => k.id === m.kindId))
+          return (
+            <section key={p.id} className="ipf-block">
+              <h4>
+                <span className="ipf-block-n" aria-hidden>
+                  {String(n + 1).padStart(2, '0')}
+                </span>
+                {p.name}
+              </h4>
+              <ul className="pi-list">
+                {p.kinds.map((k) => {
+                  const count = ev.filter((e) => e.programKind === k.id).length
+                  const m = ms.filter((x) => x.kindId === k.id)
+                  return (
+                    <li key={k.id}>
+                      <div className="pi-row">
+                        <span className="pi-name">{k.label}</span>
+                        <span className={`pi-count${count ? ' has' : ''}`}>{count === 0 ? 'لا شواهد' : count === 1 ? 'شاهد واحد' : count === 2 ? 'شاهدان' : `${count} شواهد`}</span>
+                      </div>
+                      {m.map((x) => (
+                        <MeasureLine key={x.id} m={x} onEdit={() => crud.openEdit(x)} />
+                      ))}
+                      {m.length === 0 && (
+                        <button className="link-btn edit-only pi-add" onClick={() => crud.openNew(blank(p.id, k.id))}>
+                          <AddRegular aria-hidden /> المستهدف والنتيجة
+                        </button>
+                      )}
+                    </li>
+                  )
+                })}
+                {extra.map((x) => (
+                  <li key={x.id}>
+                    <div className="pi-row">
+                      <span className="pi-name">{measureTitle(x)}</span>
+                    </div>
+                    <MeasureLine m={x} onEdit={() => crud.openEdit(x)} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        })}
+      </div>
+      <p className="caption no-print" style={{ marginTop: 12 }}>
+        <a href={href('impact')}>صفحة قياس الأثر</a> تعرض كل المؤشرات في جداول.
+      </p>
+      {crud.node}
+    </>
+  )
+}
+
+function MeasureLine({ m, onEdit }: { m: ProgramMeasure; onEdit: () => void }) {
+  return (
+    <div className="pi-measure">
+      <span>
+        المستهدف: <Value v={m.target} empty="لم يُحدد" />
+      </span>
+      <span>
+        النتيجة: <Value v={m.actual} empty="لم تُقس بعد" />
+      </span>
+      {m.notes && <span className="pi-notes">{m.notes}</span>}
+      <button className="btn subtle small icon edit-only" aria-label={`تعديل قياس ${measureTitle(m)}`} title="تعديل" onClick={onEdit}>
+        <EditRegular />
+      </button>
     </div>
   )
 }
