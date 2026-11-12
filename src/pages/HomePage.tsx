@@ -1,5 +1,5 @@
 import { useStore } from '../data/store'
-import { kindOf, programById, programs } from '../data/programs'
+import { activeKinds, kindOf, programById, programs } from '../data/programs'
 import { imagesOf } from '../components/ProgramEvidence'
 import { useImageUrl } from '../components/EvidenceGallery'
 import { Message, Progress, Section } from '../components/ui'
@@ -120,14 +120,15 @@ export default function HomePage() {
           <ul className="hp-progs">
             {programs.map((p) => {
               const list = progEvidence.filter((e) => e.programId === p.id)
-              const covered = p.kinds.filter((k) => list.some((e) => e.programKind === k.id)).length
-              const pct = Math.round((covered / p.kinds.length) * 100)
+              const kinds = activeKinds(p)
+              const covered = kinds.filter((k) => list.some((e) => e.programKind === k.id)).length
+              const pct = Math.round((covered / kinds.length) * 100)
               return (
                 <li key={p.id}>
                   <div className="hp-prog-row">
                     <span className="hp-prog-name">{p.name}</span>
                     <span className="caption nowrap">
-                      {covered} من {p.kinds.length}
+                      {covered} من {kinds.length}
                     </span>
                   </div>
                   <Progress pct={pct} tone={pct === 100 ? 'success' : undefined} />

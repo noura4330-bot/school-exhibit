@@ -212,7 +212,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
             }}
           >
             <option value="">{program ? 'اختاري نوع الشاهد' : 'اختاري البرنامج أولًا'}</option>
-            {program?.kinds.map((k) => (
+            {program?.kinds.filter((k) => !k.retired || k.id === initial.programKind).map((k) => (
               <option key={k.id} value={k.id}>
                 {k.label}
               </option>

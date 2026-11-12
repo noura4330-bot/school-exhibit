@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { AddRegular, DeleteRegular, EditRegular } from '@fluentui/react-icons'
 import { makeBase, useStore } from '../data/store'
 import type { ProgramMeasure } from '../data/types'
-import { kindOf, programById, programs } from '../data/programs'
+import { activeKinds, kindOf, programById, programs } from '../data/programs'
 import { href } from '../lib/router'
 import { Drawer, useFeedback } from './feedback'
 import { FieldShell } from './form'
@@ -80,7 +80,7 @@ function MeasureEditor({ initial, isNew, onClose }: { initial: ProgramMeasure; i
             }}
           >
             <option value="">{program ? (!kind && d.title ? `${d.title} (مؤشر سابق)` : 'اختاري المؤشر') : 'اختاري البرنامج أولًا'}</option>
-            {program?.kinds.map((k) => (
+            {program?.kinds.filter((k) => !k.retired || k.id === initial.kindId).map((k) => (
               <option key={k.id} value={k.id}>
                 {k.label}
               </option>
@@ -249,7 +249,7 @@ export function ProgramImpactOverview() {
         {programs.map((p, n) => {
           const ev = data.evidence.filter((e) => e.programId === p.id)
           const ms = data.programMeasures.filter((m) => m.programId === p.id)
-          const extra = ms.filter((m) => !p.kinds.some((k) => k.id === m.kindId))
+          const extra = ms.filter((m) => !activeKinds(p).some((k) => k.id === m.kindId))
           return (
             <section key={p.id} className="ipf-block">
               <h4>
@@ -259,7 +259,7 @@ export function ProgramImpactOverview() {
                 {p.name}
               </h4>
               <ul className="pi-list">
-                {p.kinds.map((k) => {
+                {activeKinds(p).map((k) => {
                   const count = ev.filter((e) => e.programKind === k.id).length
                   const m = ms.filter((x) => x.kindId === k.id)
                   return (
