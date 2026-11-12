@@ -195,9 +195,9 @@ export const refKindLabels: Record<RefKind, string> = {
 export const refRoutes: Record<RefKind, string> = {
   activity: 'initiative',
   policy: 'governance',
-  workshop: 'professional',
-  practice: 'teaching',
-  project: 'projects',
+  workshop: 'evidence',
+  practice: 'evidence',
+  project: 'evidence',
   indicator: 'readiness',
   impact: 'impact',
   task: 'initiative',
@@ -291,12 +291,12 @@ export function computeAlerts(data: AppData): Alert[] {
   }
   for (const p of data.projects) {
     if (p.photos.length > 0 && p.consent !== 'full') {
-      alerts.push({ id: `prj-${p.id}`, tone: 'danger', text: `صور مشروع «${p.title}» مخفية لعدم اكتمال موافقات النشر.`, route: 'projects' })
+      alerts.push({ id: `prj-${p.id}`, tone: 'danger', text: `صور مشروع «${p.title}» مخفية لعدم اكتمال موافقات النشر.`, route: 'evidence' })
     }
   }
   for (const w of data.workshops) {
     if (w.date && w.date <= todayIso() && w.attendance.length === 0) {
-      alerts.push({ id: `ws-${w.id}`, tone: 'warning', text: `ورشة «${w.title}» بلا سجل حضور مرفق.`, route: 'professional' })
+      alerts.push({ id: `ws-${w.id}`, tone: 'warning', text: `ورشة «${w.title}» بلا سجل حضور مرفق.`, route: 'evidence' })
     }
   }
 
@@ -329,9 +329,9 @@ export function computeAlerts(data: AppData): Alert[] {
   if (data.evidence.length === 0)
     alerts.push({ id: 'gap-ev', tone: 'warning', text: 'لم يُسجل أي شاهد بعد. أضيفي الشواهد واربطيها بالأنشطة والمؤشرات.', route: 'evidence' })
   if (data.workshops.length === 0)
-    alerts.push({ id: 'gap-ws', tone: 'warning', text: 'لم تُسجل ورش تدريب للمعلمات بعد، مع خطتها وسجلات حضورها.', route: 'professional' })
+    alerts.push({ id: 'gap-ws', tone: 'warning', text: 'لم تُسجل ورش تدريب للمعلمات بعد، مع خطتها وسجلات حضورها.', route: 'evidence' })
   if (data.practices.filter((p) => !p.isTemplate).length === 0)
-    alerts.push({ id: 'gap-pr', tone: 'warning', text: 'لم تُوثق ممارسات صفية بعد.', route: 'teaching' })
+    alerts.push({ id: 'gap-pr', tone: 'warning', text: 'لم تُوثق ممارسات صفية بعد.', route: 'evidence' })
   if (data.indicators.length === 0)
     alerts.push({
       id: 'gap-ind',

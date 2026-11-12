@@ -5,9 +5,6 @@ export type RouteId =
   | 'home'
   | 'initiative'
   | 'governance'
-  | 'professional'
-  | 'teaching'
-  | 'projects'
   | 'evidence'
   | 'impact'
   | 'readiness'
@@ -19,9 +16,6 @@ const routes: RouteId[] = [
   'home',
   'initiative',
   'governance',
-  'professional',
-  'teaching',
-  'projects',
   'evidence',
   'impact',
   'readiness',

@@ -10,9 +10,6 @@ import HomePage from './pages/HomePage'
 import InitiativePage from './pages/InitiativePage'
 import GovernancePage from './pages/GovernancePage'
 import GovernanceAdminPage from './pages/GovernanceAdminPage'
-import ProfessionalPage from './pages/ProfessionalPage'
-import TeachingPage from './pages/TeachingPage'
-import ProjectsPage from './pages/ProjectsPage'
 import EvidencePage from './pages/EvidencePage'
 import ImpactPage from './pages/ImpactPage'
 import ReadinessPage from './pages/ReadinessPage'
@@ -24,9 +21,6 @@ const pages: Record<RouteId, (p: { param: string }) => ReactNode> = {
   home: () => <HomePage />,
   initiative: () => <InitiativePage />,
   governance: ({ param }) => (param === 'manage' ? <GovernanceAdminPage /> : <GovernancePage />),
-  professional: () => <ProfessionalPage />,
-  teaching: () => <TeachingPage />,
-  projects: () => <ProjectsPage />,
   evidence: ({ param }) => <EvidencePage focusId={param} />,
   impact: () => <ImpactPage />,
   readiness: () => <ReadinessPage />,
