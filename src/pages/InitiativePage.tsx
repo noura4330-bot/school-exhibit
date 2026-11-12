@@ -21,6 +21,7 @@ import { FormFields, validateFields, type Errors, type FieldDef } from '../compo
 import { RecordCollection, useCrud, ViewToggle, type EditorConfig } from '../components/records'
 import { taskConfig } from '../components/taskConfig'
 import { IniProfile } from '../components/IniProfile'
+import { EvidenceGallery } from '../components/EvidenceGallery'
 import { ActivityCard, ImpactAxisCards, TaskCard } from '../components/IniCards'
 import { computeKpis, evidenceFor } from '../data/selectors'
 import { href } from '../lib/router'
@@ -638,6 +639,22 @@ export default function InitiativePage() {
             <ReportDoc text={ini.achievementReport} />
           </More>
         )}
+      </section>
+
+      {/* ===== 06 الشواهد: صورة ووصف ===== */}
+      <section className="ini-sec" id="ini-evidence" aria-labelledby="ini-evidence-title">
+        <SecHead
+          n="06"
+          id="ini-evidence"
+          title="شواهد المبادرة"
+          sub="صورة كل شاهد ووصفه."
+          actions={
+            <a className="btn small" href={href('evidence')}>
+              ملف الشواهد
+            </a>
+          }
+        />
+        <EvidenceGallery />
       </section>
 
       {editing && <ProfileEditor onClose={() => setEditing(false)} />}
