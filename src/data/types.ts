@@ -261,6 +261,18 @@ export interface Evidence extends BaseRecord {
   visibleProof: string
   needsCompletion: 'yes' | 'no' | ''
   hasPersonalData: 'yes' | 'no' | ''
+  /** البرنامج ونوع الشاهد من قائمة البرامج الثمانية (src/data/programs.ts)؛ فارغان للشواهد القديمة */
+  programId?: string
+  programKind?: string
+}
+
+/** مؤشر قياس أثر لأحد البرامج الثمانية */
+export interface ProgramMeasure extends BaseRecord {
+  programId: string
+  title: string
+  target: string
+  actual: string
+  notes: string
 }
 
 export type IndicatorStatus =
@@ -363,6 +375,7 @@ export interface AppData {
   impact: ImpactMeasure[]
   tasks: Task[]
   govDocs: GovernanceDoc[]
+  programMeasures: ProgramMeasure[]
 }
 
 export type CollectionKey =
@@ -378,3 +391,4 @@ export type CollectionKey =
   | 'impact'
   | 'tasks'
   | 'govDocs'
+  | 'programMeasures'

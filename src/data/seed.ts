@@ -278,6 +278,7 @@ export function createSeed(): AppData {
       templateStatus: 'not_started',
     },
     impact: [],
+    programMeasures: [],
     tasks: [...tasks, ...followUpTaskRecords(base)],
     govDocs: [],
   })))))

@@ -103,6 +103,7 @@ export function normalizeData(raw: unknown): AppData {
         : arr(r.tasks, seed.tasks),
     // الإصدار 10: وثائق الحوكمة الموحدة (تُنشأ أدناه إن لم توجد)
     govDocs: Array.isArray(r.govDocs) ? r.govDocs : [],
+    programMeasures: arr(r.programMeasures, []),
   }
   // الإصدار 6: بيانات مرحلة التخطيط (المبررات، ومسودة السياسة، والتقييم الأولي للحوكمة، ومؤشرات الأثر) في الخانات الفارغة فقط
   const governed = applyPolicyFile(applyGovDocs((r.version ?? 1) < 6 ? applyPlanning(out) : out))

@@ -42,7 +42,7 @@ const titleFrom = (text: string) => {
   return first.length > 60 ? `${first.slice(0, 60).trim()}…` : first
 }
 
-function useImageUrl(fileId?: string) {
+export function useImageUrl(fileId?: string) {
   const [url, setUrl] = useState<string | null>(null)
   useEffect(() => {
     setUrl(null)
@@ -216,7 +216,19 @@ export function EvidenceLightbox({ e, onClose, onEdit, onDelete }: { e: Evidence
 }
 
 /** شبكة الشواهد مع الإضافة والتعديل والحذف لمديرة النظام. limit لعرض جزء منها فقط */
-export function EvidenceGallery({ focusId, onFocus, limit }: { focusId?: string; onFocus?: (id: string | null) => void; limit?: number }) {
+export function EvidenceGallery({
+  focusId,
+  onFocus,
+  limit,
+  only,
+  noAdd,
+}: {
+  focusId?: string
+  onFocus?: (id: string | null) => void
+  limit?: number
+  only?: (e: Evidence) => boolean
+  noAdd?: boolean
+}) {
   const { data, remove } = useStore()
   const { confirm, toast } = useFeedback()
   const [editing, setEditing] = useState<{ e: Evidence; isNew: boolean } | null>(null)
@@ -230,7 +242,7 @@ export function EvidenceGallery({ focusId, onFocus, limit }: { focusId?: string;
     setEditing({ e: blankEvidence(), isNew: true })
   }
 
-  const all = [...data.evidence].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const all = data.evidence.filter((e) => !only || only(e)).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   const items = limit ? all.slice(0, limit) : all
   const viewing = viewId && viewId !== 'new' ? data.evidence.find((e) => e.id === viewId) ?? null : null
 
@@ -249,11 +261,13 @@ export function EvidenceGallery({ focusId, onFocus, limit }: { focusId?: string;
 
   return (
     <>
-      <div className="row ev-actions edit-only">
-        <button className="btn primary" onClick={() => setEditing({ e: blankEvidence(), isNew: true })}>
-          <AddRegular /> إضافة شاهد
-        </button>
-      </div>
+      {!noAdd && (
+        <div className="row ev-actions edit-only">
+          <button className="btn primary" onClick={() => setEditing({ e: blankEvidence(), isNew: true })}>
+            <AddRegular /> إضافة شاهد
+          </button>
+        </div>
+      )}
       {items.length === 0 ? (
         <p className="muted">لم تُضف شواهد بعد.</p>
       ) : (

@@ -5,6 +5,7 @@ import { impactExamples } from '../data/seed'
 import { evidenceFor, practiceDoc } from '../data/selectors'
 import { Badge, EmptyState, Message, PageHeader, Section, Value } from '../components/ui'
 import { useCrud, type EditorConfig } from '../components/records'
+import { ProgramMeasures } from '../components/ProgramMeasures'
 import type { FieldDef } from '../components/form'
 import { formatDate, formatNumber, todayIso, toNumber } from '../lib/util'
 
@@ -144,6 +145,8 @@ export default function ImpactPage() {
           </button>
         }
       />
+      <ProgramMeasures />
+
       <Message tone="info">الرسوم تُبنى من القيم المدخلة فقط، ولا يُنسب التحسن إلى المبادرة ما لم يسمح أسلوب القياس بذلك.</Message>
 
       {impactExamples.some((ex) => !active.has(ex.title)) ? (
