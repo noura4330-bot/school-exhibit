@@ -126,7 +126,15 @@ export function normalizeData(raw: unknown): AppData {
   // الإصدار 8: توحيد كتابة اسم مسؤولة المبادرة «نوره الزبيدي» في كل البيانات المحفوظة
   const named = (r.version ?? 1) < 8 ? (JSON.parse(JSON.stringify(planned).replaceAll('نورة الزبيدي', 'نوره الزبيدي')) as AppData) : planned
   // الإصدار 15: اسم المدرسة الصحيح «ثانوية أحد بني زيد» دون ضمة، في كل البيانات المحفوظة
-  return (r.version ?? 1) < 15 ? (JSON.parse(JSON.stringify(named).replaceAll('أُحد بني زيد', 'أحد بني زيد')) as AppData) : named
+  const schooled = (r.version ?? 1) < 15 ? (JSON.parse(JSON.stringify(named).replaceAll('أُحد بني زيد', 'أحد بني زيد')) as AppData) : named
+  // الإصدار 20: حذف مؤشرات الأثر العامة السابقة وروابط الشواهد إليها، بطلب مديرة النظام (2026-11-13)، مرة واحدة.
+  // تبقى نسخة منها في سجل النسخ السابقة (app_state_history) وفي النسخ الاحتياطية.
+  if ((r.version ?? 1) >= 20) return schooled
+  return {
+    ...schooled,
+    impact: [],
+    evidence: schooled.evidence.map((e) => (e.links.some((l) => l.kind === 'impact') ? { ...e, links: e.links.filter((l) => l.kind !== 'impact') } : e)),
+  }
 }
 
 function load(): { data: AppData; loadError: string | null; migrated?: boolean } {

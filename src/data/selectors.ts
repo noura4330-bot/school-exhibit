@@ -347,18 +347,6 @@ export function computeAlerts(data: AppData): Alert[] {
       text: 'لم يُحدد مستوى التقييم الذاتي لمجال Policy and Governance، ويتطلب مؤشرات المقياس الرسمي ومراجعة الشواهد.',
       route: 'readiness',
     })
-  if (data.impact.length === 0)
-    alerts.push({ id: 'gap-imp', tone: 'warning', text: 'لم تُسجل مؤشرات قياس الأثر بخط أساس ومستهدف.', route: 'impact' })
-  else {
-    const noBase = data.impact.filter((m) => !m.baseline.trim()).length
-    if (noBase)
-      alerts.push({
-        id: 'gap-imp',
-        tone: 'warning',
-        text: `مؤشرات أثر بلا خط أساس مقيس: ${noBase} من ${data.impact.length}. يلزم قياس أولي قبل بدء التنفيذ.`,
-        route: 'impact',
-      })
-  }
   const drafts = data.policies.filter((p) => p.status === 'drafting' || p.status === 'awaiting_review').length
   if (drafts)
     alerts.push({
