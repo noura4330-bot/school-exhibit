@@ -253,8 +253,8 @@ export default function InitiativePage() {
 
       {/* ===== 02 البرامج وشواهدها ===== */}
       <section className="ini-sec" id="ini-evidence" aria-labelledby="ini-evidence-title">
-        <SecHead n="02" id="ini-evidence" title="برامج المبادرة وشواهدها" sub="افتحي أي برنامج لعرض شواهده ووصفها وصورها." />
-        <ProgramsBoard />
+        <SecHead n="02" id="ini-evidence" title="برامج المبادرة وشواهدها" sub="شواهد كل برنامج بصورها ووصفها، متتابعة حسب البرامج." />
+        <ProgramsBoard expanded />
       </section>
 
       {editing && <ProfileEditor onClose={() => setEditing(false)} />}

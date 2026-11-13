@@ -8555,3 +8555,15 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
   font-weight: var(--w-semibold);
   color: var(--fg2);
 }
+/* ملف المبادرة: البرامج وشواهدها معروضة متتابعة دون نقر */
+.pe-board-list .pe-panel:first-child {
+  margin-top: 0;
+}
+.pe-board-list .pe-panel {
+  margin-top: var(--s-l);
+}
+.pe-panel-n {
+  color: var(--brand);
+  font-weight: var(--w-bold);
+  margin-inline-end: 8px;
+}

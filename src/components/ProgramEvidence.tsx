@@ -323,7 +323,7 @@ function ProgramCard({ p, n, count, cover, active, onOpen }: { p: ProgramDef; n:
 }
 
 /** بطاقات البرامج، وعند فتح أحدها تظهر شواهده وصوره تحته */
-export function ProgramsBoard({ focusId, onDone }: { focusId?: string; onDone?: () => void }) {
+export function ProgramsBoard({ focusId, onDone, expanded }: { focusId?: string; onDone?: () => void; expanded?: boolean }) {
   const { data, remove } = useStore()
   const { confirm, toast } = useFeedback()
   const [openId, setOpenId] = useState<string | null>(null)
@@ -349,7 +349,6 @@ export function ProgramsBoard({ focusId, onDone }: { focusId?: string; onDone?: 
   // ملف السياسة وتقرير التحقق من وثيقة الحوكمة نفسها، فيبقى مصدرهما واحدًا ويتحدثان معًا
   const policyDoc = data.govDocs[0]
   const policyFiles = policyDoc ? [...policyDoc.files, ...(policyDoc.companionFiles ?? [])] : []
-  const openList = open ? byProgram(open.id) : []
 
   useEffect(() => {
     if (openId) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -368,6 +367,106 @@ export function ProgramsBoard({ focusId, onDone }: { focusId?: string; onDone?: 
     await remove('evidence', e.id)
     toast('تم حذف الشاهد.')
   }
+
+  const editor = editing && (
+    <ProgramEvidenceEditor
+      initial={editing.e}
+      isNew={editing.isNew}
+      onClose={(saved) => {
+        setEditing(null)
+        if (saved) setOpenId(saved)
+        onDone?.()
+      }}
+    />
+  )
+
+  /** لوحة ملف السياسة؛ closable للوحة المفتوحة من البطاقة */
+  const policyPanel = (closable: boolean) => (
+    <div className="pe-panel" id={closable ? 'pe-panel' : 'pe-panel-policy'} ref={closable ? panelRef : undefined} role="region" aria-labelledby="pe-title-policy">
+      <div className="pe-panel-head">
+        <div>
+          <h3 id="pe-title-policy">سياسة الاستخدام والحوكمة</h3>
+          <p className="pe-panel-sum">{policyDoc?.title ?? 'وثيقة السياسة'}</p>
+        </div>
+        <div className="row" style={{ flexWrap: 'nowrap' }}>
+          <a className="btn edit-only" href={href('governance', 'manage')}>
+            <EditRegular /> تحديث ملف السياسة
+          </a>
+          {closable && (
+            <button className="btn subtle icon" aria-label="إغلاق" onClick={() => setOpenId(null)}>
+              <DismissRegular />
+            </button>
+          )}
+        </div>
+      </div>
+      {policyFiles.length ? (
+        <div className="pe-doc">
+          <AttachmentList items={policyFiles} />
+          <p className="caption">اضغطي زر الفتح لعرض الملف، أو زر التنزيل لحفظه على جهازك.</p>
+        </div>
+      ) : (
+        <p className="muted pe-empty">لم يُرفع ملف السياسة بعد.</p>
+      )}
+    </div>
+  )
+
+  /** لوحة برنامج: اسمه ووصفه، ثم شواهده مرتبة حسب أنواعها */
+  const programPanel = (p: ProgramDef, n: number, closable: boolean) => {
+    const list = byProgram(p.id)
+    return (
+      <div key={p.id} className="pe-panel" id={closable ? 'pe-panel' : `pe-panel-${p.id}`} ref={closable ? panelRef : undefined} role="region" aria-labelledby={`pe-title-${p.id}`}>
+        <div className="pe-panel-head">
+          <div>
+            <h3 id={`pe-title-${p.id}`}>
+              {!closable && (
+                <span className="pe-panel-n" aria-hidden>
+                  {String(n + 1).padStart(2, '0')}
+                </span>
+              )}
+              {p.name}
+            </h3>
+            <p className="pe-panel-sum">{p.summary}</p>
+          </div>
+          <div className="row" style={{ flexWrap: 'nowrap' }}>
+            <button className="btn primary edit-only" onClick={() => startNew(p.id)} aria-label={closable ? undefined : `إضافة شاهد إلى ${p.name}`}>
+              <AddRegular /> إضافة شاهد
+            </button>
+            {closable && (
+              <button className="btn subtle icon" aria-label="إغلاق البرنامج" onClick={() => setOpenId(null)}>
+                <DismissRegular />
+              </button>
+            )}
+          </div>
+        </div>
+        {list.length === 0 ? (
+          <p className="muted pe-empty">لم تُضف شواهد لهذا البرنامج بعد.</p>
+        ) : (
+          p.kinds
+            .map((k) => ({ k, items: list.filter((e) => e.programKind === k.id) }))
+            .concat([{ k: { id: '', label: 'شواهد أخرى', description: '' }, items: list.filter((e) => !p.kinds.some((k) => k.id === e.programKind)) }])
+            .filter((g) => g.items.length)
+            .map((g) => (
+              <section key={g.k.id || 'other'} className="pe-group">
+                <ul className="pe-items">
+                  {g.items.map((e) => (
+                    <EvidenceItem key={e.id} e={e} onEdit={() => setEditing({ e, isNew: false })} onDelete={() => void askDelete(e)} />
+                  ))}
+                </ul>
+              </section>
+            ))
+        )}
+      </div>
+    )
+  }
+
+  if (expanded)
+    return (
+      <div className="pe-board pe-board-list">
+        {programs.map((p, n) => programPanel(p, n, false))}
+        {policyPanel(false)}
+        {editor}
+      </div>
+    )
 
   return (
     <div className="pe-board">
@@ -403,80 +502,10 @@ export function ProgramsBoard({ focusId, onDone }: { focusId?: string; onDone?: 
         </li>
       </ul>
 
-      {openId === POLICY_ID && (
-        <div className="pe-panel" id="pe-panel" ref={panelRef} role="region" aria-labelledby="pe-panel-title">
-          <div className="pe-panel-head">
-            <div>
-              <h3 id="pe-panel-title">سياسة الاستخدام والحوكمة</h3>
-              <p className="pe-panel-sum">{policyDoc?.title ?? 'وثيقة السياسة'}</p>
-            </div>
-            <div className="row" style={{ flexWrap: 'nowrap' }}>
-              <a className="btn edit-only" href={href('governance', 'manage')}>
-                <EditRegular /> تحديث ملف السياسة
-              </a>
-              <button className="btn subtle icon" aria-label="إغلاق" onClick={() => setOpenId(null)}>
-                <DismissRegular />
-              </button>
-            </div>
-          </div>
-          {policyFiles.length ? (
-            <div className="pe-doc">
-              <AttachmentList items={policyFiles} />
-              <p className="caption">اضغطي زر الفتح لعرض الملف، أو زر التنزيل لحفظه على جهازك.</p>
-            </div>
-          ) : (
-            <p className="muted pe-empty">لم يُرفع ملف السياسة بعد.</p>
-          )}
-        </div>
-      )}
+      {openId === POLICY_ID && policyPanel(true)}
+      {open && programPanel(open, programs.indexOf(open), true)}
 
-      {open && (
-        <div className="pe-panel" id="pe-panel" ref={panelRef} role="region" aria-labelledby="pe-panel-title">
-          <div className="pe-panel-head">
-            <div>
-              <h3 id="pe-panel-title">{open.name}</h3>
-              <p className="pe-panel-sum">{open.summary}</p>
-            </div>
-            <div className="row" style={{ flexWrap: 'nowrap' }}>
-              <button className="btn primary edit-only" onClick={() => startNew(open.id)}>
-                <AddRegular /> إضافة شاهد
-              </button>
-              <button className="btn subtle icon" aria-label="إغلاق البرنامج" onClick={() => setOpenId(null)}>
-                <DismissRegular />
-              </button>
-            </div>
-          </div>
-          {openList.length === 0 ? (
-            <p className="muted pe-empty">لم تُضف شواهد لهذا البرنامج بعد.</p>
-          ) : (
-            open.kinds
-              .map((k) => ({ k, items: openList.filter((e) => e.programKind === k.id) }))
-              .concat([{ k: { id: '', label: 'شواهد أخرى', description: '' }, items: openList.filter((e) => !open.kinds.some((k) => k.id === e.programKind)) }])
-              .filter((g) => g.items.length)
-              .map((g) => (
-                <section key={g.k.id || 'other'} className="pe-group">
-                  <ul className="pe-items">
-                    {g.items.map((e) => (
-                      <EvidenceItem key={e.id} e={e} onEdit={() => setEditing({ e, isNew: false })} onDelete={() => void askDelete(e)} />
-                    ))}
-                  </ul>
-                </section>
-              ))
-          )}
-        </div>
-      )}
-
-      {editing && (
-        <ProgramEvidenceEditor
-          initial={editing.e}
-          isNew={editing.isNew}
-          onClose={(saved) => {
-            setEditing(null)
-            if (saved) setOpenId(saved)
-            onDone?.()
-          }}
-        />
-      )}
+      {editor}
     </div>
   )
 }
