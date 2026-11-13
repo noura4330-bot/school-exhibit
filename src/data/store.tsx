@@ -16,6 +16,7 @@ import { applyProfileV16 } from './profileV16'
 import { applyGovDocs, applyPolicyFile } from './govDocs'
 import { applyMeasuresV18 } from './measuresV18'
 import { applyMeasuresV19 } from './measuresV19'
+import { applyMeasuresV21 } from './measuresV21'
 import { applyImpactV12 } from './impactV12'
 import { applyImpactV13 } from './impactV13'
 import { applyPlanV14 } from './planV14'
@@ -112,7 +113,8 @@ export function normalizeData(raw: unknown): AppData {
     programMeasures: (() => {
       const v = r.version ?? 1
       const list = v < 18 ? applyMeasuresV18(arr(r.programMeasures, []), base) : arr(r.programMeasures, [])
-      return v < 19 ? applyMeasuresV19(list) : list
+      const v19 = v < 19 ? applyMeasuresV19(list) : list
+      return v < 21 ? applyMeasuresV21(v19, base) : v19
     })(),
   }
   // الإصدار 6: بيانات مرحلة التخطيط (المبررات، ومسودة السياسة، والتقييم الأولي للحوكمة، ومؤشرات الأثر) في الخانات الفارغة فقط
