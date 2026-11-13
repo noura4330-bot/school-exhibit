@@ -13,7 +13,7 @@ import type {
 } from './types'
 import { applyProfileV9 } from './profileV9'
 import { applyProfileV16 } from './profileV16'
-import { applyProfileV22, applyProfileV23, applyProfileV24 } from './profileV22'
+import { applyProfileV22, applyProfileV23, applyProfileV24, applyProfileV25 } from './profileV22'
 import { applyGovDocs, applyPolicyFile } from './govDocs'
 import { applyMeasuresV18 } from './measuresV18'
 import { applyMeasuresV19 } from './measuresV19'
@@ -59,6 +59,7 @@ export function normalizeData(raw: unknown): AppData {
   if ((r.version ?? 1) < 22) applyProfileV22(ini)
   else if ((r.version ?? 1) < 23) applyProfileV23(ini)
   if ((r.version ?? 1) >= 22 && (r.version ?? 1) < 24) applyProfileV24(ini)
+  if ((r.version ?? 1) >= 22 && (r.version ?? 1) < 25) applyProfileV25(ini)
   // الإصدار 17: خط الأساس 40% بطلب مديرة النظام (2026-11-12)، مرة واحدة فقط
   if ((r.version ?? 1) < 17) ini.baseline = '40%'
   // الإصدار 5: التقويم والتحسين ووصف الرحلة في الخانات الفارغة، وأنشطة مخططة ومهام متابعة لا تُكرر إن وُجدت بالعنوان نفسه
@@ -150,11 +151,14 @@ export function normalizeData(raw: unknown): AppData {
     v < 24
       ? { ...trimmed, evidence: trimmed.evidence.filter((e) => e.programId !== 'sharepoint'), programMeasures: trimmed.programMeasures.filter((m) => m.programId !== 'sharepoint') }
       : trimmed
-  if (v >= 20) return noSp
+  // الإصدار 25: اسم نشاط التوعية الجديد بطلب مديرة النظام (2026-11-13)
+  const renamed: AppData =
+    v < 25 ? { ...noSp, activities: noSp.activities.map((a) => (a.title.trim() === 'توعية الطالبات بالاستخدام الآمن والمسؤول للذكاء الاصطناعي' ? { ...a, title: 'توعية الطالبات بالتحول الرقمي والأمن السيبراني والاستخدام المسؤول للذكاء الاصطناعي' } : a)) } : noSp
+  if (v >= 20) return renamed
   return {
-    ...noSp,
+    ...renamed,
     impact: [],
-    evidence: noSp.evidence.map((e) => (e.links.some((l) => l.kind === 'impact') ? { ...e, links: e.links.filter((l) => l.kind !== 'impact') } : e)),
+    evidence: renamed.evidence.map((e) => (e.links.some((l) => l.kind === 'impact') ? { ...e, links: e.links.filter((l) => l.kind !== 'impact') } : e)),
   }
 }
 

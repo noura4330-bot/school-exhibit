@@ -8748,3 +8748,45 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
   font-size: 12.5px;
   color: var(--fg3);
 }
+/* مقاطع الفيديو في شواهد التوعية */
+.pe-videos {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.pe-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 8px;
+}
+.pe-video-wait {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 13px;
+}
+.pe-vlist {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.pe-vlist li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}
+.pe-vname {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

@@ -4,8 +4,16 @@
 import type { InitiativeProfile } from './types'
 
 // الإصدار 23: سطر البرنامج 12 (التوعية الرقمية)، يُضاف إن لم يكن موجودًا
-export const PRACTICE_12 = 'توعية الطالبات بالاستخدام الآمن للذكاء الاصطناعي وبالتحول الرقمي والممارسات الرقمية.'
-export const OUTPUT_12 = 'تعزيز وعي الطالبات بالاستخدام الآمن والمسؤول للذكاء الاصطناعي والممارسات الرقمية السليمة.'
+export const PRACTICE_12 = 'توعية الطالبات بالتحول الرقمي والأمن السيبراني والاستخدام المسؤول للذكاء الاصطناعي.'
+export const OUTPUT_12 = 'تعزيز وعي الطالبات بالتحول الرقمي والأمن السيبراني والاستخدام المسؤول للذكاء الاصطناعي.'
+// الإصدار 25: الصياغة السابقة لسطر التوعية تُستبدل بالجديدة (طلب مديرة النظام 2026-11-13)
+const OLD_PRACTICE_12 = 'توعية الطالبات بالاستخدام الآمن للذكاء الاصطناعي وبالتحول الرقمي والممارسات الرقمية.'
+const OLD_OUTPUT_12 = 'تعزيز وعي الطالبات بالاستخدام الآمن والمسؤول للذكاء الاصطناعي والممارسات الرقمية السليمة.'
+export function applyProfileV25(ini: Partial<InitiativeProfile>) {
+  const swap = (v: string | undefined, a: string, b: string) => (v ? v.split('\n').map((l) => (l.trim() === a ? b : l)).join('\n') : v)
+  ini.targetPractices = swap(ini.targetPractices, OLD_PRACTICE_12, PRACTICE_12)
+  ini.expectedOutputs = swap(ini.expectedOutputs, OLD_OUTPUT_12, OUTPUT_12)
+}
 
 export function applyProfileV23(ini: Partial<InitiativeProfile>) {
   const add = (v: string | undefined, line: string) => (v?.includes(line) ? v : v?.trim() ? `${v.trimEnd()}\n${line}` : line)

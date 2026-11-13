@@ -14,7 +14,8 @@ import {
 import { useStore } from '../data/store'
 import type { Attachment, Evidence } from '../data/types'
 import { kindOf, MAX_IMAGES, MIN_IMAGES, programById, programs, type ProgramDef } from '../data/programs'
-import { deleteFile, saveFile } from '../lib/fileStore'
+import { deleteFile, getFile, saveFile } from '../lib/fileStore'
+import { formatSize } from '../lib/util'
 import { shrinkImage } from '../lib/imageShrink'
 import { Drawer, Modal, useFeedback } from './feedback'
 import { AttachmentList, FieldShell } from './form'
@@ -24,6 +25,44 @@ import { blankEvidence, useImageUrl } from './EvidenceGallery'
 const POLICY_ID = 'policy'
 const isImage = (a: Attachment) => a.type.startsWith('image/')
 export const imagesOf = (e: Evidence) => e.files.filter(isImage)
+const isVideo = (a: Attachment) => a.type.startsWith('video/')
+export const videosOf = (e: Evidence) => e.files.filter(isVideo)
+/** البرامج التي تقبل شواهدها مقاطع فيديو مع الصور (طلب مديرة النظام 2026-11-13) */
+const VIDEO_PROGRAMS = ['digital-awareness']
+const MAX_VIDEOS = 5
+
+/** رابط تشغيل لملف فيديو محفوظ */
+function useVideoUrl(fileId?: string) {
+  const [url, setUrl] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    setUrl(null)
+    setFailed(false)
+    if (!fileId) return
+    let made: string | null = null
+    let live = true
+    getFile(fileId)
+      .then((f) => {
+        if (!live) return
+        if (f) {
+          made = URL.createObjectURL(f.blob)
+          setUrl(made)
+        } else setFailed(true)
+      })
+      .catch(() => live && setFailed(true))
+    return () => {
+      live = false
+      if (made) URL.revokeObjectURL(made)
+    }
+  }, [fileId])
+  return { url, failed }
+}
+
+function VideoPlayer({ file, label }: { file: Attachment; label: string }) {
+  const { url, failed } = useVideoUrl(file.id)
+  if (url) return <video className="pe-video" src={url} controls preload="metadata" playsInline aria-label={label} />
+  return <div className="pe-video pe-video-wait">{failed ? 'تعذر تحميل المقطع.' : 'جارٍ تحميل المقطع…'}</div>
+}
 /** وصف الشاهد: الوصف الجاهز لنوعه، وإلا المحفوظ في السجل */
 /** برنامج «بناء قدرات المعلمات»: شواهده تحمل اسم المعلمة */
 const TEACHER_PROGRAM = 'teacher-capacity'
@@ -98,6 +137,9 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
   const [kindId, setKindId] = useState(initial.programKind ?? '')
   const [images, setImages] = useState<Attachment[]>(imagesOf(initial))
   const [teacher, setTeacher] = useState(initial.teacherName ?? '')
+  const [videos, setVideos] = useState<Attachment[]>(videosOf(initial))
+  const [vBusy, setVBusy] = useState(0)
+  const vInputRef = useRef<HTMLInputElement>(null)
   const [errors, setErrors] = useState<{ program?: string; kind?: string; images?: string; teacher?: string }>({})
   const [busy, setBusy] = useState(0)
   const uploaded = useRef<string[]>([])
@@ -105,7 +147,8 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
   const program = programById(programId)
   const kind = kindOf(programId, kindId)
   const needsTeacher = programId === TEACHER_PROGRAM
-  const dirty = teacher !== (initial.teacherName ?? '') || programId !== (initial.programId ?? '') || kindId !== (initial.programKind ?? '') || images.map((x) => x.id).join() !== imagesOf(initial).map((x) => x.id).join()
+  const allowsVideo = VIDEO_PROGRAMS.includes(programId)
+  const dirty = videos.map((x) => x.id).join() !== videosOf(initial).map((x) => x.id).join() || teacher !== (initial.teacherName ?? '') || programId !== (initial.programId ?? '') || kindId !== (initial.programKind ?? '') || images.map((x) => x.id).join() !== imagesOf(initial).map((x) => x.id).join()
 
   const addFiles = async (list: FileList | null) => {
     if (!list?.length) return
@@ -131,6 +174,30 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
     }
   }
 
+  const addVideos = async (list: FileList | null) => {
+    if (!list?.length) return
+    const files = Array.from(list).filter((f) => f.type.startsWith('video/'))
+    if (files.length < list.length) toast('تُقبل مقاطع الفيديو فقط في هذه الخانة، وتُرك غيرها.', 'error')
+    const room = MAX_VIDEOS - videos.length
+    if (files.length > room) toast(`الحد الأعلى ${MAX_VIDEOS} مقاطع للشاهد؛ أُضيف ${Math.max(room, 0)} فقط.`, 'error')
+    const take = files.slice(0, Math.max(room, 0))
+    if (vInputRef.current) vInputRef.current.value = ''
+    if (!take.length) return
+    setVBusy((b) => b + take.length)
+    for (const f of take) {
+      try {
+        const meta = await saveFile(f)
+        uploaded.current.push(meta.id)
+        setVideos((cur) => [...cur, meta])
+        setErrors((x) => ({ ...x, images: undefined }))
+      } catch (err) {
+        toast(`تعذر رفع «${f.name}»: ${(err as Error).message}`, 'error')
+      } finally {
+        setVBusy((b) => b - 1)
+      }
+    }
+  }
+
   const cancel = async () => {
     if (dirty) {
       const ok = await confirm({ title: 'تجاهل التعديلات؟', body: 'لم يُحفظ هذا الشاهد.', confirmLabel: 'تجاهل التعديلات', danger: true })
@@ -144,15 +211,16 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
     const errs: typeof errors = {}
     if (!program) errs.program = 'اختاري البرنامج.'
     if (!kind) errs.kind = 'اختاري نوع الشاهد.'
-    if (images.length < MIN_IMAGES) errs.images = 'ارفعي صورة واحدة على الأقل للشاهد.'
+    const keptVideos = allowsVideo ? videos : []
+    if (images.length < MIN_IMAGES && !(allowsVideo && keptVideos.length)) errs.images = allowsVideo ? 'ارفعي صورة أو مقطع فيديو واحدًا على الأقل.' : 'ارفعي صورة واحدة على الأقل للشاهد.'
     else if (images.length > MAX_IMAGES) errs.images = `الحد الأعلى ${MAX_IMAGES} صورة للشاهد (المرفوع الآن ${images.length}).`
     if (needsTeacher && !teacher.trim()) errs.teacher = 'اكتبي اسم المعلمة.'
     if (errs.program || errs.kind || errs.images || errs.teacher) {
       setErrors(errs)
       return
     }
-    const keep = new Set(images.map((x) => x.id))
-    const others = initial.files.filter((f) => !isImage(f))
+    const keep = new Set([...images, ...keptVideos].map((x) => x.id))
+    const others = initial.files.filter((f) => !isImage(f) && !isVideo(f))
     upsert('evidence', {
       ...initial,
       programId,
@@ -161,9 +229,9 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
       description: kind!.description,
       teacherName: needsTeacher ? teacher.trim() : undefined,
       type: 'image',
-      files: [...images, ...others],
+      files: [...images, ...keptVideos, ...others],
     })
-    const drop = [...uploaded.current.filter((id) => !keep.has(id)), ...imagesOf(initial).filter((f) => !keep.has(f.id)).map((f) => f.id)]
+    const drop = [...uploaded.current.filter((id) => !keep.has(id)), ...[...imagesOf(initial), ...videosOf(initial)].filter((f) => !keep.has(f.id)).map((f) => f.id)]
     await Promise.all(drop.map((id) => deleteFile(id).catch(() => undefined)))
     toast(isNew ? 'تم حفظ الشاهد.' : 'تم حفظ التعديلات.')
     onClose(programId)
@@ -178,7 +246,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
           <button className="btn" onClick={() => void cancel()}>
             إلغاء
           </button>
-          <button className="btn primary edit-only" onClick={() => void save()} disabled={busy > 0}>
+          <button className="btn primary edit-only" onClick={() => void save()} disabled={busy > 0 || vBusy > 0}>
             حفظ الشاهد
           </button>
         </>
@@ -246,7 +314,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
             {kind ? kind.description : <span className="muted">يظهر الوصف تلقائيًا عند اختيار نوع الشاهد.</span>}
           </p>
         </div>
-        <FieldShell id="pe-images" label={`صور الشاهد (صورة واحدة أو أكثر، حتى ${MAX_IMAGES})`} required error={errors.images} full>
+        <FieldShell id="pe-images" label={allowsVideo ? `صور الشاهد (حتى ${MAX_IMAGES})` : `صور الشاهد (صورة واحدة أو أكثر، حتى ${MAX_IMAGES})`} required={!allowsVideo} error={errors.images} full>
           <div className="pe-upload">
             {images.length > 0 && (
               <ul className="pe-thumbs">
@@ -284,6 +352,40 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
             </div>
           </div>
         </FieldShell>
+        {allowsVideo && (
+          <FieldShell id="pe-videos" label={`مقاطع الفيديو (اختياري، حتى ${MAX_VIDEOS} مقاطع، 50 م.ب للمقطع)`} full>
+            <div className="pe-upload">
+              {videos.length > 0 && (
+                <ul className="pe-vlist">
+                  {videos.map((a, n) => (
+                    <li key={a.id}>
+                      <span className="pe-vname">
+                        <bdi>{a.name}</bdi> <span className="caption">({formatSize(a.size)})</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="btn subtle small icon danger"
+                        aria-label={`إزالة المقطع ${n + 1}`}
+                        onClick={() => setVideos((cur) => cur.filter((x) => x.id !== a.id))}
+                      >
+                        <DeleteRegular />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="row">
+                <input ref={vInputRef} id="pe-videos" type="file" accept="video/*" multiple className="sr-only" onChange={(e) => void addVideos(e.target.files)} />
+                <button type="button" className="btn" onClick={() => vInputRef.current?.click()} disabled={vBusy > 0 || videos.length >= MAX_VIDEOS}>
+                  <AddRegular /> {videos.length ? 'إضافة مقاطع' : 'اختيار مقاطع فيديو'}
+                </button>
+                <span className="caption" aria-live="polite">
+                  {vBusy > 0 ? 'جارٍ رفع المقاطع…' : `${videos.length} من ${MAX_VIDEOS}`}
+                </span>
+              </div>
+            </div>
+          </FieldShell>
+        )}
       </div>
     </Drawer>
   )
@@ -292,6 +394,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
 function EvidenceItem({ e, onEdit, onDelete }: { e: Evidence; onEdit: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState<number | null>(null)
   const imgs = imagesOf(e)
+  const vids = videosOf(e)
   const kind = kindOf(e.programId, e.programKind)
   const label = kind?.label ?? e.title
   return (
@@ -320,7 +423,16 @@ function EvidenceItem({ e, onEdit, onDelete }: { e: Evidence; onEdit: () => void
           ))}
         </ul>
       ) : (
-        <p className="caption">لا توجد صور لهذا الشاهد.</p>
+        !vids.length && <p className="caption">لا توجد صور لهذا الشاهد.</p>
+      )}
+      {vids.length > 0 && (
+        <ul className="pe-videos">
+          {vids.map((a, n) => (
+            <li key={a.id}>
+              <VideoPlayer file={a} label={`${label}: المقطع ${n + 1}`} />
+            </li>
+          ))}
+        </ul>
       )}
       {open !== null && <Lightbox images={imgs} start={open} caption={label} onClose={() => setOpen(null)} />}
     </li>

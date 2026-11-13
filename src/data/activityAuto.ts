@@ -22,7 +22,7 @@ export function activityAuto(d: AppData, a: Activity): ActivityAuto | null {
   }
   if (/ورش|المعلمات/.test(t) && !/ممارسات/.test(t)) return { count: programCount(d, ['teacher-capacity']), source: 'شواهد بناء قدرات المعلمات' }
   if (/ممارسات تعليمية/.test(t)) return { count: programCount(d, ['teaching-practices']), source: 'شواهد توظيف التقنية في الممارسات التعليمية' }
-  if (/توعية/.test(t)) return { count: programCount(d, ['digital-awareness']), source: 'شواهد التوعية الرقمية والاستخدام الآمن للذكاء الاصطناعي' }
+  if (/توعية/.test(t)) return { count: programCount(d, ['digital-awareness']), source: 'شواهد التوعية بالتحول الرقمي والأمن السيبراني والاستخدام المسؤول للذكاء الاصطناعي' }
   if (/مشروعات/.test(t)) return { count: programCount(d, ['student-projects']), source: 'شواهد توثيق مشروعات الطالبات' }
   return null
 }
