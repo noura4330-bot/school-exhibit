@@ -13,7 +13,7 @@ import type {
 } from './types'
 import { applyProfileV9 } from './profileV9'
 import { applyProfileV16 } from './profileV16'
-import { applyProfileV22 } from './profileV22'
+import { applyProfileV22, applyProfileV23 } from './profileV22'
 import { applyGovDocs, applyPolicyFile } from './govDocs'
 import { applyMeasuresV18 } from './measuresV18'
 import { applyMeasuresV19 } from './measuresV19'
@@ -57,6 +57,7 @@ export function normalizeData(raw: unknown): AppData {
   // الإصدار 16: الرسالة والقيم والفجوة والممارسات والمخرجات والأثر المنشود، في الخانات الفارغة فقط
   if ((r.version ?? 1) < 16) applyProfileV16(ini)
   if ((r.version ?? 1) < 22) applyProfileV22(ini)
+  else if ((r.version ?? 1) < 23) applyProfileV23(ini)
   // الإصدار 17: خط الأساس 40% بطلب مديرة النظام (2026-11-12)، مرة واحدة فقط
   if ((r.version ?? 1) < 17) ini.baseline = '40%'
   // الإصدار 5: التقويم والتحسين ووصف الرحلة في الخانات الفارغة، وأنشطة مخططة ومهام متابعة لا تُكرر إن وُجدت بالعنوان نفسه
@@ -133,11 +134,21 @@ export function normalizeData(raw: unknown): AppData {
   const schooled = (r.version ?? 1) < 15 ? (JSON.parse(JSON.stringify(named).replaceAll('أُحد بني زيد', 'أحد بني زيد')) as AppData) : named
   // الإصدار 20: حذف مؤشرات الأثر العامة السابقة وروابط الشواهد إليها، بطلب مديرة النظام (2026-11-13)، مرة واحدة.
   // تبقى نسخة منها في سجل النسخ السابقة (app_state_history) وفي النسخ الاحتياطية.
-  if ((r.version ?? 1) >= 20) return schooled
+  const v = r.version ?? 1
+  // الإصدار 23: حذف نشاط «تطوير الإجراءات بناءً على نتائج التقييم» من خطة التنفيذ بطلب مديرة النظام (2026-11-13)
+  const dropped = v < 23 ? schooled.activities.filter((a) => a.title.trim() === 'تطوير الإجراءات بناءً على نتائج التقييم').map((a) => a.id) : []
+  const trimmed: AppData = dropped.length
+    ? {
+        ...schooled,
+        activities: schooled.activities.filter((a) => !dropped.includes(a.id)),
+        evidence: schooled.evidence.map((e) => (e.links.some((l) => l.kind === 'activity' && dropped.includes(l.id)) ? { ...e, links: e.links.filter((l) => !(l.kind === 'activity' && dropped.includes(l.id))) } : e)),
+      }
+    : schooled
+  if (v >= 20) return trimmed
   return {
-    ...schooled,
+    ...trimmed,
     impact: [],
-    evidence: schooled.evidence.map((e) => (e.links.some((l) => l.kind === 'impact') ? { ...e, links: e.links.filter((l) => l.kind !== 'impact') } : e)),
+    evidence: trimmed.evidence.map((e) => (e.links.some((l) => l.kind === 'impact') ? { ...e, links: e.links.filter((l) => l.kind !== 'impact') } : e)),
   }
 }
 

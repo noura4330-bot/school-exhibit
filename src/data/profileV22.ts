@@ -3,6 +3,16 @@
 // النص السابق محفوظ في سجل النسخ السابقة.
 import type { InitiativeProfile } from './types'
 
+// الإصدار 23: سطر البرنامج 12 (التوعية الرقمية)، يُضاف إن لم يكن موجودًا
+export const PRACTICE_12 = 'توعية الطالبات بالاستخدام الآمن للذكاء الاصطناعي وبالتحول الرقمي والممارسات الرقمية.'
+export const OUTPUT_12 = 'تعزيز وعي الطالبات بالاستخدام الآمن والمسؤول للذكاء الاصطناعي والممارسات الرقمية السليمة.'
+
+export function applyProfileV23(ini: Partial<InitiativeProfile>) {
+  const add = (v: string | undefined, line: string) => (v?.includes(line) ? v : v?.trim() ? `${v.trimEnd()}\n${line}` : line)
+  ini.targetPractices = add(ini.targetPractices, PRACTICE_12)
+  ini.expectedOutputs = add(ini.expectedOutputs, OUTPUT_12)
+}
+
 export const targetPracticesV22 = [
   'تدريب الطالبات على استخدام Microsoft Teams.',
   'تفعيل دفتر الملاحظات الرقمي OneNote واستخدامه في تنظيم ملفات الإنجاز.',
@@ -15,6 +25,7 @@ export const targetPracticesV22 = [
   'توثيق مشروعات الطالبات الرقمية.',
   'توظيف التطبيقات الرقمية في الممارسات التعليمية والدروس المنفذة من المعلمات.',
   'بناء قدرات المعلمات في توظيف التطبيقات الرقمية.',
+  PRACTICE_12,
 ].join('\n')
 
 export const expectedOutputsV22 = [
@@ -29,6 +40,7 @@ export const expectedOutputsV22 = [
   'توثيق مراحل مشروعات الطالبات ومخرجاتها رقميًا.',
   'زيادة توظيف التطبيقات الرقمية في الممارسات التعليمية.',
   'تعزيز جاهزية المعلمات لتوظيف التطبيقات الرقمية في التدريس.',
+  OUTPUT_12,
 ].join('\n')
 
 export function applyProfileV22(ini: Partial<InitiativeProfile>) {

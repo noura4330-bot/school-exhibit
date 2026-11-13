@@ -97,12 +97,6 @@ export const plannedActivities: PlannedActivity[] = [
     description: 'تحديد خط الأساس والمستهدف، ثم قياس النتائج الفعلية ومقارنتها.',
     notes: 'الهدف: تحسين نواتج التعلم. المؤشر: عدد مؤشرات الأثر المكتملة البيانات.',
   },
-  {
-    title: 'تطوير الإجراءات بناءً على نتائج التقييم',
-    domain: 'initiative',
-    description: 'مراجعة النتائج وتحديث الخطة والإجراءات التحسينية.',
-    notes: 'الهدف: التحسين المستمر. المؤشر: الإجراءات التحسينية المنفذة بعد كل مراجعة.',
-  },
 ]
 
 export const plannedActivityRecords = (base: () => { id: string; createdAt: string; updatedAt: string }): Activity[] =>
