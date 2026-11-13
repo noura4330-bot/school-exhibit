@@ -7,6 +7,7 @@ import { StatusBadge, Value } from '../components/ui'
 import { parseStages, SecHead, stageProgress, type Stage } from '../components/InitiativeSections'
 import { Drawer, useFeedback } from '../components/feedback'
 import { FormFields, validateFields, type Errors, type FieldDef } from '../components/form'
+import { AchievedResults } from '../components/AchievedResults'
 import { Block, IniProfile, openProfileTab, type TabKey } from '../components/IniProfile'
 import { ProgramsBoard } from '../components/ProgramEvidence'
 import { ProgramImpactOverview } from '../components/ProgramMeasures'
@@ -36,8 +37,8 @@ const groups: { title: string; fields: FieldDef[] }[] = [
     title: 'النطاق والمخرجات المتوقعة',
     fields: [
       { key: 'scope', label: 'نطاق التطبيق', type: 'textarea', rows: 2 },
-      { key: 'targetPractices', label: 'الممارسات المستهدفة', type: 'textarea', hint: 'ممارسة في كل سطر.' },
-      { key: 'expectedOutputs', label: 'المخرجات المتوقعة', type: 'textarea', hint: 'مخرج في كل سطر. لا تُعرض بوصفها إنجازات.' },
+      { key: 'targetPractices', label: 'الممارسات المستهدفة', type: 'textarea', hint: 'ممارسة في كل سطر، بترتيب البرامج (السطر 1 للبرنامج 01 وهكذا).' },
+      { key: 'expectedOutputs', label: 'المخرجات المتوقعة', type: 'textarea', hint: 'مخرج في كل سطر بترتيب البرامج، بصيغة وصفية أو مستقبلية. لا تُعرض بوصفها إنجازات.' },
       { key: 'intendedImpact', label: 'الأثر التعليمي المنشود', type: 'textarea', rows: 2 },
     ],
   },
@@ -58,7 +59,7 @@ const groups: { title: string; fields: FieldDef[] }[] = [
       { key: 'measurementPlan', label: 'خطة قياس الأثر', type: 'textarea', hint: 'خطوة في كل سطر، بصيغة «العنوان: الوصف».' },
       { key: 'baseline', label: 'خط الأساس', type: 'textarea', rows: 2 },
       { key: 'target', label: 'المستهدف', type: 'textarea', rows: 2 },
-      { key: 'actualResults', label: 'النتائج الفعلية', type: 'textarea', hint: 'سجّلي النتائج المقيسة فعلًا فقط، مع مصدرها.' },
+      { key: 'actualResults', label: 'النتائج الفعلية', type: 'textarea', hint: 'اختياري: نتائج مقيسة فعلًا خارج الشواهد والمؤشرات، مع مصدرها. النتائج المتحققة لكل برنامج تُحسب تلقائيًا.' },
     ],
   },
   {
@@ -248,6 +249,7 @@ export default function InitiativePage() {
           onEdit={() => setEditing(true)}
           plan={<PlanTab ini={ini} stages={stages} intro={intro} />}
           impact={<ProgramImpactOverview />}
+          results={<AchievedResults />}
         />
       </section>
 

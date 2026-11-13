@@ -14,7 +14,7 @@ const tabs = [
   { key: 'goals', title: 'الأهداف' },
   { key: 'why', title: 'المبررات والمشكلة' },
   { key: 'roles', title: 'الفئات المستهدفة والأدوار' },
-  { key: 'scope', title: 'النطاق والمخرجات المتوقعة' },
+  { key: 'scope', title: 'الممارسات والمخرجات والنتائج' },
   { key: 'plan', title: 'خطة التنفيذ' },
   { key: 'impact', title: 'مؤشرات قياس الأثر' },
 ] as const
@@ -81,6 +81,20 @@ const List = ({ text }: { text: string }) => (
   </ul>
 )
 
+/** قائمة مرقمة: رقم كل سطر هو رقم برنامجه في الشواهد والنتائج المتحققة */
+const NumList = ({ text }: { text: string }) => (
+  <ol className="ipf-numlist">
+    {lines(text).map((l, i) => (
+      <li key={i}>
+        <span className="ar-n" aria-hidden>
+          {String(i + 1).padStart(2, '0')}
+        </span>
+        {stripMarker(l)}
+      </li>
+    ))}
+  </ol>
+)
+
 /** أدوار الفئات من حقل «المسؤوليات»، كل سطر «الفئة: الدور» */
 function roleOf(text: string, test: RegExp): string {
   const l = lines(text).map(stripMarker).find((x) => test.test(splitLead(x)[0] ?? ''))
@@ -94,6 +108,7 @@ export function IniProfile({
   onEdit,
   plan,
   impact,
+  results,
 }: {
   ini: InitiativeProfile
   settings: Settings
@@ -101,6 +116,7 @@ export function IniProfile({
   onEdit: () => void
   plan: ReactNode
   impact: ReactNode
+  results: ReactNode
 }) {
   const [tab, setTab] = useState<TabKey>(readTab)
   const btns = useRef<(HTMLButtonElement | null)[]>([])
@@ -368,7 +384,7 @@ export function IniProfile({
       {/* 06 النطاق والمخرجات المتوقعة */}
       <div className="ipf-panel" role="tabpanel" id="ipf-panel-scope" aria-labelledby="ipf-tab-scope" hidden={tab !== 'scope'}>
         <PanelHead i={5} />
-        <div className="ipf-pair">
+        <div className="ipf-pair ipf-one">
           <div>
             <h4>نطاق التطبيق</h4>
             {has(ini.scope) ? (
@@ -379,25 +395,26 @@ export function IniProfile({
               </p>
             )}
           </div>
-          <div>
-            <h4>الممارسات المستهدفة</h4>
-            {has(ini.targetPractices) ? <List text={ini.targetPractices!} /> : <p className="empty-value">لم تُسجل بعد.</p>}
-          </div>
         </div>
         <div className="ipf-outcomes">
-          <section className="ipf-expected" aria-label="المتوقع">
-            <span className="ipf-tag">متوقع · لم يتحقق بعد</span>
-            <h4>المخرجات المتوقعة</h4>
-            {has(ini.expectedOutputs) ? <List text={ini.expectedOutputs!} /> : <p className="empty-value">لم تُسجل بعد.</p>}
+          <section className="ipf-planned" aria-labelledby="ipf-h-practices">
+            <span className="ipf-tag">مخطط · ما خططنا لتنفيذه</span>
+            <h4 id="ipf-h-practices">الممارسات المستهدفة</h4>
+            {has(ini.targetPractices) ? <NumList text={ini.targetPractices!} /> : <p className="empty-value">لم تُسجل بعد.</p>}
+          </section>
+          <section className="ipf-expected" aria-labelledby="ipf-h-outputs">
+            <span className="ipf-tag">متوقع · ما نتطلع إلى تحقيقه</span>
+            <h4 id="ipf-h-outputs">المخرجات المتوقعة</h4>
+            {has(ini.expectedOutputs) ? <NumList text={ini.expectedOutputs!} /> : <p className="empty-value">لم تُسجل بعد.</p>}
             <h4>الأثر التعليمي المنشود</h4>
             {has(ini.intendedImpact) ? <p className="pre-line">{ini.intendedImpact}</p> : <p className="empty-value">لم يُسجل بعد.</p>}
           </section>
-          <section className={`ipf-achieved${has(ini.actualResults) ? '' : ' is-empty'}`} aria-label="المتحقق">
-            <span className="ipf-tag">متحقق فعلًا</span>
-            <h4>النتائج المتحققة</h4>
-            {has(ini.actualResults) ? <p className="pre-line">{ini.actualResults}</p> : <p className="empty-value">لم تُسجل نتائج متحققة بعد. تُسجل بعد القياس مع مصدرها.</p>}
-          </section>
         </div>
+        <section className="ipf-achieved ipf-achieved-full" aria-labelledby="ipf-h-results">
+          <span className="ipf-tag">متحقق · ما نفذناه وتثبته الشواهد والمؤشرات</span>
+          <h4 id="ipf-h-results">النتائج المتحققة</h4>
+          {results}
+        </section>
         <Missing
           items={[
             ['الممارسات المستهدفة', ini.targetPractices],

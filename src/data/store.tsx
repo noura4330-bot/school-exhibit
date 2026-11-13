@@ -13,6 +13,7 @@ import type {
 } from './types'
 import { applyProfileV9 } from './profileV9'
 import { applyProfileV16 } from './profileV16'
+import { applyProfileV22 } from './profileV22'
 import { applyGovDocs, applyPolicyFile } from './govDocs'
 import { applyMeasuresV18 } from './measuresV18'
 import { applyMeasuresV19 } from './measuresV19'
@@ -55,6 +56,7 @@ export function normalizeData(raw: unknown): AppData {
   if ((r.version ?? 1) < 9) applyProfileV9(ini)
   // الإصدار 16: الرسالة والقيم والفجوة والممارسات والمخرجات والأثر المنشود، في الخانات الفارغة فقط
   if ((r.version ?? 1) < 16) applyProfileV16(ini)
+  if ((r.version ?? 1) < 22) applyProfileV22(ini)
   // الإصدار 17: خط الأساس 40% بطلب مديرة النظام (2026-11-12)، مرة واحدة فقط
   if ((r.version ?? 1) < 17) ini.baseline = '40%'
   // الإصدار 5: التقويم والتحسين ووصف الرحلة في الخانات الفارغة، وأنشطة مخططة ومهام متابعة لا تُكرر إن وُجدت بالعنوان نفسه

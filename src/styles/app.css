@@ -8622,3 +8622,119 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+/* الممارسات المستهدفة (مخطط) والنتائج المتحققة المحسوبة تلقائيًا */
+.ipf-pair.ipf-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ipf-planned {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  background: #fff;
+}
+.ipf-planned .ipf-tag {
+  background: var(--surface-sunk);
+  color: var(--fg2);
+}
+.ipf-planned h4 {
+  margin: 4px 0 0;
+}
+.ipf-achieved-full {
+  margin-top: 14px;
+}
+.ipf-achieved-full h4 {
+  margin: 4px 0 0;
+}
+.ipf-numlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--fg2);
+  line-height: 26px;
+}
+.ipf-numlist li {
+  display: flex;
+  gap: 8px;
+}
+.ar-n {
+  flex: none;
+  color: var(--brand);
+  font-weight: var(--w-bold);
+  font-variant-numeric: tabular-nums;
+}
+.ar-sum {
+  margin: 0 0 12px;
+  font-weight: var(--w-semibold);
+  color: var(--fg1);
+}
+.ar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.ar-item {
+  padding: 12px 14px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--success-border);
+  min-width: 0;
+}
+.ar-item.is-empty {
+  border-color: var(--line);
+  background: var(--surface-sunk);
+}
+.ar-item h5 {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.ar-item ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  color: var(--fg2);
+  line-height: 24px;
+}
+.ar-item .empty-value {
+  margin: 0;
+}
+.ar-kind {
+  display: inline-block;
+  margin-inline-end: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: var(--w-bold);
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.ar-kind.ev {
+  background: var(--gold-tint);
+  color: #7a5f22;
+}
+.ar-manual {
+  margin-top: 12px;
+}
+.ar-manual h5 {
+  margin: 0 0 4px;
+}
+.ar-note {
+  margin: 12px 0 0;
+}
+@media (max-width: 760px) {
+  .ar-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
