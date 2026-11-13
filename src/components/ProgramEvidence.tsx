@@ -14,7 +14,7 @@ import {
 import { useStore } from '../data/store'
 import type { Attachment, Evidence } from '../data/types'
 import { kindOf, MAX_IMAGES, MIN_IMAGES, programById, programs, type ProgramDef } from '../data/programs'
-import { deleteFile, getFile, saveFile } from '../lib/fileStore'
+import { deleteFile, getFile, MAX_FILE_BYTES, saveFile } from '../lib/fileStore'
 import { formatSize } from '../lib/util'
 import { shrinkImage } from '../lib/imageShrink'
 import { Drawer, Modal, useFeedback } from './feedback'
@@ -29,7 +29,7 @@ const isVideo = (a: Attachment) => a.type.startsWith('video/')
 export const videosOf = (e: Evidence) => e.files.filter(isVideo)
 /** البرامج التي تقبل شواهدها مقاطع فيديو مع الصور (طلب مديرة النظام 2026-11-13) */
 const VIDEO_PROGRAMS = ['digital-awareness']
-const MAX_VIDEOS = 5
+const MAX_VIDEOS = 1
 
 /** رابط تشغيل لملف فيديو محفوظ */
 function useVideoUrl(fileId?: string) {
@@ -140,7 +140,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
   const [videos, setVideos] = useState<Attachment[]>(videosOf(initial))
   const [vBusy, setVBusy] = useState(0)
   const vInputRef = useRef<HTMLInputElement>(null)
-  const [errors, setErrors] = useState<{ program?: string; kind?: string; images?: string; teacher?: string }>({})
+  const [errors, setErrors] = useState<{ program?: string; kind?: string; images?: string; teacher?: string; video?: string }>({})
   const [busy, setBusy] = useState(0)
   const uploaded = useRef<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
@@ -174,27 +174,27 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
     }
   }
 
-  const addVideos = async (list: FileList | null) => {
-    if (!list?.length) return
-    const files = Array.from(list).filter((f) => f.type.startsWith('video/'))
-    if (files.length < list.length) toast('تُقبل مقاطع الفيديو فقط في هذه الخانة، وتُرك غيرها.', 'error')
-    const room = MAX_VIDEOS - videos.length
-    if (files.length > room) toast(`الحد الأعلى ${MAX_VIDEOS} مقاطع للشاهد؛ أُضيف ${Math.max(room, 0)} فقط.`, 'error')
-    const take = files.slice(0, Math.max(room, 0))
+  /** مقطع فيديو واحد للشاهد، حتى 50 م.ب (حد التخزين)، مع رسالة واضحة تحت الخانة عند الرفض أو الخطأ */
+  const addVideo = async (f?: File) => {
     if (vInputRef.current) vInputRef.current.value = ''
-    if (!take.length) return
-    setVBusy((b) => b + take.length)
-    for (const f of take) {
-      try {
-        const meta = await saveFile(f)
-        uploaded.current.push(meta.id)
-        setVideos((cur) => [...cur, meta])
-        setErrors((x) => ({ ...x, images: undefined }))
-      } catch (err) {
-        toast(`تعذر رفع «${f.name}»: ${(err as Error).message}`, 'error')
-      } finally {
-        setVBusy((b) => b - 1)
-      }
+    if (!f) return
+    if (!f.type.startsWith('video/')) return setErrors((x) => ({ ...x, video: 'اختاري ملف فيديو (مثل MP4 أو MOV).' }))
+    if (f.size > MAX_FILE_BYTES)
+      return setErrors((x) => ({
+        ...x,
+        video: `حجم المقطع ${formatSize(f.size)}، والحد الأعلى 50 م.ب. قصّري المقطع أو صدّريه من الجوال بجودة أقل (720p مثلًا) ثم أعيدي المحاولة.`,
+      }))
+    setErrors((x) => ({ ...x, video: undefined }))
+    setVBusy(1)
+    try {
+      const meta = await saveFile(f)
+      uploaded.current.push(meta.id)
+      setVideos([meta])
+      setErrors((x) => ({ ...x, images: undefined }))
+    } catch (err) {
+      setErrors((x) => ({ ...x, video: `تعذر رفع المقطع: ${(err as Error).message}` }))
+    } finally {
+      setVBusy(0)
     }
   }
 
@@ -353,7 +353,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
           </div>
         </FieldShell>
         {allowsVideo && (
-          <FieldShell id="pe-videos" label={`مقاطع الفيديو (اختياري، حتى ${MAX_VIDEOS} مقاطع، 50 م.ب للمقطع)`} full>
+          <FieldShell id="pe-videos" label="مقطع فيديو (اختياري، مقطع واحد حتى 50 م.ب)" error={errors.video} full>
             <div className="pe-upload">
               {videos.length > 0 && (
                 <ul className="pe-vlist">
@@ -366,6 +366,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
                         type="button"
                         className="btn subtle small icon danger"
                         aria-label={`إزالة المقطع ${n + 1}`}
+                        disabled={vBusy > 0}
                         onClick={() => setVideos((cur) => cur.filter((x) => x.id !== a.id))}
                       >
                         <DeleteRegular />
@@ -375,12 +376,12 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
                 </ul>
               )}
               <div className="row">
-                <input ref={vInputRef} id="pe-videos" type="file" accept="video/*" multiple className="sr-only" onChange={(e) => void addVideos(e.target.files)} />
+                <input ref={vInputRef} id="pe-videos" type="file" accept="video/*" className="sr-only" onChange={(e) => void addVideo(e.target.files?.[0])} />
                 <button type="button" className="btn" onClick={() => vInputRef.current?.click()} disabled={vBusy > 0 || videos.length >= MAX_VIDEOS}>
-                  <AddRegular /> {videos.length ? 'إضافة مقاطع' : 'اختيار مقاطع فيديو'}
+                  <AddRegular /> اختيار مقطع فيديو
                 </button>
                 <span className="caption" aria-live="polite">
-                  {vBusy > 0 ? 'جارٍ رفع المقاطع…' : `${videos.length} من ${MAX_VIDEOS}`}
+                  {vBusy > 0 ? 'جارٍ رفع المقطع، قد يستغرق دقيقة…' : videos.length ? 'أُضيف المقطع. لتغييره احذفيه ثم اختاري غيره.' : ''}
                 </span>
               </div>
             </div>
