@@ -13,6 +13,32 @@ import { Section, Value } from './ui'
 /** اسم المؤشر: نوع الشاهد الذي يقيسه، وإلا العنوان المكتوب سابقًا */
 export const measureTitle = (m: ProgramMeasure) => kindOf(m.programId, m.kindId)?.label ?? m.title
 
+const firstNum = (v: string) => {
+  const m = v.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/,/g, '').match(/\d+(?:\.\d+)?/)
+  return m ? Number(m[0]) : null
+}
+const isPct = (v: string) => /[%٪]/.test(v)
+
+/** نسبة الإنجاز تُحسب تلقائيًا من العدد الفعلي إلى المستهدف (أو من نسبتين). لا تُحسب إن اختلفت الوحدتان */
+export function measurePct(m: Pick<ProgramMeasure, 'target' | 'actual'>): number | null {
+  const t = firstNum(m.target)
+  const a = firstNum(m.actual)
+  if (t === null || a === null || t <= 0 || isPct(m.target) !== isPct(m.actual.replace(/\(.*\)/, ''))) return null
+  return Math.round((a / t) * 100)
+}
+
+/** النتيجة الفعلية مع النسبة المحسوبة، دون تكرارها إن كانت النتيجة نسبة أصلًا */
+function Actual({ m }: { m: ProgramMeasure }) {
+  const pct = measurePct(m)
+  const shown = m.actual.replace(/\s*\([\d٠-٩.]+\s*[%٪]\)\s*$/, '')
+  return (
+    <>
+      <Value v={shown} empty="لم تُقس بعد" />
+      {pct !== null && !isPct(shown) && <span className="pm-pct"> ({pct}%)</span>}
+    </>
+  )
+}
+
 const blank = (programId = '', kindId = ''): ProgramMeasure => ({ ...makeBase(), programId, kindId, title: '', target: '', actual: '', notes: '' })
 
 function MeasureEditor({ initial, isNew, onClose }: { initial: ProgramMeasure; isNew: boolean; onClose: () => void }) {
@@ -93,6 +119,11 @@ function MeasureEditor({ initial, isNew, onClose }: { initial: ProgramMeasure; i
         <FieldShell id="pm-actual" label="النتيجة الفعلية">
           <input id="pm-actual" className="input" value={d.actual} onChange={(e) => set({ actual: e.target.value })} />
         </FieldShell>
+        <p className="caption pm-auto" aria-live="polite">
+          {measurePct(d) !== null
+            ? `نسبة الإنجاز المحسوبة تلقائيًا: ${measurePct(d)}%`
+            : 'اكتبي المستهدف والنتيجة بالعدد (مثل 350 طالبة و110 طالبات) لتُحسب النسبة تلقائيًا.'}
+        </p>
         <FieldShell id="pm-notes" label="وصف مختصر للنتيجة" full>
           <textarea id="pm-notes" className="input" rows={3} value={d.notes} onChange={(e) => set({ notes: e.target.value })} />
         </FieldShell>
@@ -131,6 +162,9 @@ export function ProgramMeasures() {
         </button>
       }
     >
+      <p className="caption pm-caveat">
+        تُحسب نسبة الإنجاز تلقائيًا من النتيجة الفعلية إلى المستهدف. والأعداد تمثل المشاركات في التدريب أو التطبيق، ولا تعني إتقان جميعهن للمهارة.
+      </p>
       <div className="pm-list">
         {programs.map((p, n) => {
           const list = data.programMeasures.filter((m) => m.programId === p.id)
@@ -193,7 +227,7 @@ function MeasureTable({ list, onEdit, onDelete }: { list: ProgramMeasure[]; onEd
                 <Value v={m.target} empty="لم يُحدد" />
               </td>
               <td>
-                <Value v={m.actual} empty="لم تُقس بعد" />
+                <Actual m={m} />
               </td>
               <td className="pre-line">
                 <Value v={m.notes} />
@@ -307,7 +341,7 @@ function MeasureLine({ m, onEdit }: { m: ProgramMeasure; onEdit: () => void }) {
         المستهدف: <Value v={m.target} empty="لم يُحدد" />
       </span>
       <span>
-        النتيجة: <Value v={m.actual} empty="لم تُقس بعد" />
+        النتيجة: <Actual m={m} />
       </span>
       {m.notes && <span className="pi-notes">{m.notes}</span>}
       <button className="btn subtle small icon edit-only" aria-label={`تعديل قياس ${measureTitle(m)}`} title="تعديل" onClick={onEdit}>

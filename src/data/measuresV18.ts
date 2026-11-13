@@ -2,7 +2,7 @@
 // والنتائج بين 245 و298 طالبة). تُضاف مرة واحدة، ولا يُضاف مؤشر موجود بالعنوان نفسه في البرنامج نفسه.
 import type { ProgramMeasure } from './types'
 
-const rows: [string, string, string, string, string][] = [
+export const v18Rows: [string, string, string, string, string][] = [
   ['teams-training', 'عدد الطالبات المتدربات على استخدام منصة Microsoft Teams', '350 طالبة', '287 طالبة (82%)', 'تلقت الطالبات تدريبًا على الدخول إلى الفرق والقنوات واستخدام أدواتها، مما رفع جاهزيتهن للتعلم عبر المنصة.'],
   ['onenote', 'عدد الطالبات اللاتي فعّلن دفتر الملاحظات الرقمي لتنظيم ملفات الإنجاز', '350 طالبة', '259 طالبة (74%)', 'فُعّل دفتر الملاحظات الرقمي لدى الطالبات، وأصبحت أعمالهن وملفات إنجازهن منظمة في مكان واحد يسهل الرجوع إليه.'],
   ['onedrive', 'عدد الطالبات اللاتي يرفعن ملفاتهن وينظمنها على OneDrive', '350 طالبة', '273 طالبة (78%)', 'اعتمدت الطالبات التخزين السحابي في حفظ ملفاتهن ومشاركتها، فأصبح الوصول إليها متاحًا من مختلف الأجهزة.'],
@@ -18,7 +18,7 @@ const rows: [string, string, string, string, string][] = [
 
 export function applyMeasuresV18(existing: ProgramMeasure[], base: () => { id: string; createdAt: string; updatedAt: string }): ProgramMeasure[] {
   const have = new Set(existing.map((m) => `${m.programId}|${m.title.trim()}`))
-  const add = rows
+  const add = v18Rows
     .filter(([p, t]) => !have.has(`${p}|${t}`))
     .map(([programId, title, target, actual, notes]) => ({ ...base(), programId, kindId: '', title, target, actual, notes }))
   return [...existing, ...add]

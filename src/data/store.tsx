@@ -15,6 +15,7 @@ import { applyProfileV9 } from './profileV9'
 import { applyProfileV16 } from './profileV16'
 import { applyGovDocs, applyPolicyFile } from './govDocs'
 import { applyMeasuresV18 } from './measuresV18'
+import { applyMeasuresV19 } from './measuresV19'
 import { applyImpactV12 } from './impactV12'
 import { applyImpactV13 } from './impactV13'
 import { applyPlanV14 } from './planV14'
@@ -107,7 +108,11 @@ export function normalizeData(raw: unknown): AppData {
     // الإصدار 10: وثائق الحوكمة الموحدة (تُنشأ أدناه إن لم توجد)
     govDocs: Array.isArray(r.govDocs) ? r.govDocs : [],
     // الإصدار 18: مؤشرات أثر البرامج المعتمدة من مديرة النظام، مرة واحدة فقط
-    programMeasures: (r.version ?? 1) < 18 ? applyMeasuresV18(arr(r.programMeasures, []), base) : arr(r.programMeasures, []),
+    programMeasures: (() => {
+      const v = r.version ?? 1
+      const list = v < 18 ? applyMeasuresV18(arr(r.programMeasures, []), base) : arr(r.programMeasures, [])
+      return v < 19 ? applyMeasuresV19(list) : list
+    })(),
   }
   // الإصدار 6: بيانات مرحلة التخطيط (المبررات، ومسودة السياسة، والتقييم الأولي للحوكمة، ومؤشرات الأثر) في الخانات الفارغة فقط
   const governed = applyPolicyFile(applyGovDocs((r.version ?? 1) < 6 ? applyPlanning(out) : out))

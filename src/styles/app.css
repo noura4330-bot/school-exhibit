@@ -8567,3 +8567,14 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
   font-weight: var(--w-bold);
   margin-inline-end: 8px;
 }
+.pm-auto {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.pm-pct {
+  color: var(--fg2);
+  white-space: nowrap;
+}
+.pm-caveat {
+  margin: 0 0 var(--s-l);
+}
