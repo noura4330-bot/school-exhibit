@@ -8738,3 +8738,8 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.pe-item-teacher {
+  margin: 2px 0 0;
+  font-weight: var(--w-semibold);
+  color: var(--fg1);
+}

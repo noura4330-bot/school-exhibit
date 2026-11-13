@@ -25,6 +25,8 @@ const POLICY_ID = 'policy'
 const isImage = (a: Attachment) => a.type.startsWith('image/')
 export const imagesOf = (e: Evidence) => e.files.filter(isImage)
 /** وصف الشاهد: الوصف الجاهز لنوعه، وإلا المحفوظ في السجل */
+/** برنامج «بناء قدرات المعلمات»: شواهده تحمل اسم المعلمة */
+const TEACHER_PROGRAM = 'teacher-capacity'
 export const programEvidenceText = (e: Evidence) => kindOf(e.programId, e.programKind)?.description ?? e.description
 const countLabel = (n: number) => (n === 0 ? 'لا شواهد بعد' : n === 1 ? 'شاهد واحد' : n === 2 ? 'شاهدان' : n <= 10 ? `${n} شواهد` : `${n} شاهدًا`)
 
@@ -95,13 +97,15 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
   const [programId, setProgramId] = useState(initial.programId ?? '')
   const [kindId, setKindId] = useState(initial.programKind ?? '')
   const [images, setImages] = useState<Attachment[]>(imagesOf(initial))
-  const [errors, setErrors] = useState<{ program?: string; kind?: string; images?: string }>({})
+  const [teacher, setTeacher] = useState(initial.teacherName ?? '')
+  const [errors, setErrors] = useState<{ program?: string; kind?: string; images?: string; teacher?: string }>({})
   const [busy, setBusy] = useState(0)
   const uploaded = useRef<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const program = programById(programId)
   const kind = kindOf(programId, kindId)
-  const dirty = programId !== (initial.programId ?? '') || kindId !== (initial.programKind ?? '') || images.map((x) => x.id).join() !== imagesOf(initial).map((x) => x.id).join()
+  const needsTeacher = programId === TEACHER_PROGRAM
+  const dirty = teacher !== (initial.teacherName ?? '') || programId !== (initial.programId ?? '') || kindId !== (initial.programKind ?? '') || images.map((x) => x.id).join() !== imagesOf(initial).map((x) => x.id).join()
 
   const addFiles = async (list: FileList | null) => {
     if (!list?.length) return
@@ -142,7 +146,8 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
     if (!kind) errs.kind = 'اختاري نوع الشاهد.'
     if (images.length < MIN_IMAGES) errs.images = 'ارفعي صورة واحدة على الأقل للشاهد.'
     else if (images.length > MAX_IMAGES) errs.images = `الحد الأعلى ${MAX_IMAGES} صورة للشاهد (المرفوع الآن ${images.length}).`
-    if (errs.program || errs.kind || errs.images) {
+    if (needsTeacher && !teacher.trim()) errs.teacher = 'اكتبي اسم المعلمة.'
+    if (errs.program || errs.kind || errs.images || errs.teacher) {
       setErrors(errs)
       return
     }
@@ -152,8 +157,9 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
       ...initial,
       programId,
       programKind: kindId,
-      title: `${program!.name}: ${kind!.label}`,
+      title: `${program!.name}: ${kind!.label}${needsTeacher ? ` (${teacher.trim()})` : ''}`,
       description: kind!.description,
+      teacherName: needsTeacher ? teacher.trim() : undefined,
       type: 'image',
       files: [...images, ...others],
     })
@@ -219,6 +225,21 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
             ))}
           </select>
         </FieldShell>
+        {needsTeacher && (
+          <FieldShell id="pe-teacher" label="اسم المعلمة" required error={errors.teacher} full>
+            <input
+              id="pe-teacher"
+              className="input"
+              value={teacher}
+              autoComplete="off"
+              aria-invalid={errors.teacher ? true : undefined}
+              onChange={(e) => {
+                setTeacher(e.target.value)
+                setErrors((x) => ({ ...x, teacher: undefined }))
+              }}
+            />
+          </FieldShell>
+        )}
         <div className="field full">
           <span className="pe-label">وصف الشاهد</span>
           <p className="pe-desc" aria-live="polite">
@@ -286,6 +307,7 @@ function EvidenceItem({ e, onEdit, onDelete }: { e: Evidence; onEdit: () => void
           </button>
         </div>
       </div>
+      {e.teacherName && <p className="pe-item-teacher">المعلمة: {e.teacherName}</p>}
       <p className="pe-item-desc">{programEvidenceText(e)}</p>
       {imgs.length > 0 ? (
         <ul className="pe-gallery">

@@ -264,6 +264,8 @@ export interface Evidence extends BaseRecord {
   /** البرنامج ونوع الشاهد من قائمة البرامج (src/data/programs.ts)؛ فارغان للشواهد القديمة */
   programId?: string
   programKind?: string
+  /** اسم المعلمة لشواهد «بناء قدرات المعلمات» */
+  teacherName?: string
 }
 
 /** مؤشر قياس أثر لأحد البرامج */
