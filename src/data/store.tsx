@@ -13,7 +13,7 @@ import type {
 } from './types'
 import { applyProfileV9 } from './profileV9'
 import { applyProfileV16 } from './profileV16'
-import { applyProfileV22, applyProfileV23 } from './profileV22'
+import { applyProfileV22, applyProfileV23, applyProfileV24 } from './profileV22'
 import { applyGovDocs, applyPolicyFile } from './govDocs'
 import { applyMeasuresV18 } from './measuresV18'
 import { applyMeasuresV19 } from './measuresV19'
@@ -58,6 +58,7 @@ export function normalizeData(raw: unknown): AppData {
   if ((r.version ?? 1) < 16) applyProfileV16(ini)
   if ((r.version ?? 1) < 22) applyProfileV22(ini)
   else if ((r.version ?? 1) < 23) applyProfileV23(ini)
+  if ((r.version ?? 1) >= 22 && (r.version ?? 1) < 24) applyProfileV24(ini)
   // الإصدار 17: خط الأساس 40% بطلب مديرة النظام (2026-11-12)، مرة واحدة فقط
   if ((r.version ?? 1) < 17) ini.baseline = '40%'
   // الإصدار 5: التقويم والتحسين ووصف الرحلة في الخانات الفارغة، وأنشطة مخططة ومهام متابعة لا تُكرر إن وُجدت بالعنوان نفسه
@@ -144,11 +145,16 @@ export function normalizeData(raw: unknown): AppData {
         evidence: schooled.evidence.map((e) => (e.links.some((l) => l.kind === 'activity' && dropped.includes(l.id)) ? { ...e, links: e.links.filter((l) => !(l.kind === 'activity' && dropped.includes(l.id))) } : e)),
       }
     : schooled
-  if (v >= 20) return trimmed
+  // الإصدار 24: حذف شواهد برنامج SharePoint ومؤشراته بطلب مديرة النظام (2026-11-13). تبقى في سجل النسخ السابقة.
+  const noSp: AppData =
+    v < 24
+      ? { ...trimmed, evidence: trimmed.evidence.filter((e) => e.programId !== 'sharepoint'), programMeasures: trimmed.programMeasures.filter((m) => m.programId !== 'sharepoint') }
+      : trimmed
+  if (v >= 20) return noSp
   return {
-    ...trimmed,
+    ...noSp,
     impact: [],
-    evidence: trimmed.evidence.map((e) => (e.links.some((l) => l.kind === 'impact') ? { ...e, links: e.links.filter((l) => l.kind !== 'impact') } : e)),
+    evidence: noSp.evidence.map((e) => (e.links.some((l) => l.kind === 'impact') ? { ...e, links: e.links.filter((l) => l.kind !== 'impact') } : e)),
   }
 }
 

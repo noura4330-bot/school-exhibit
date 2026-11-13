@@ -62,17 +62,6 @@ export const programs: ProgramDef[] = [
     ],
   },
   {
-    id: 'sharepoint',
-    name: 'إدارة المحتوى التعليمي SharePoint',
-    summary: 'توثيق تنظيم المحتوى التعليمي وإدارته ومشاركته إلكترونيًا.',
-    kinds: [
-      { id: 'library', label: 'إنشاء مكتبة المحتوى التعليمي', description: 'توثيق إنشاء مكتبة المحتوى التعليمي على SharePoint وتهيئتها لحفظ المواد التعليمية.', retired: true },
-      { id: 'upload', label: 'رفع الملفات والمواد التعليمية', description: 'توثيق رفع الملفات والمواد التعليمية إلى مكتبة SharePoint وإتاحتها للاستخدام.' },
-      { id: 'classify', label: 'تصنيف المحتوى حسب المجالات والمواد', description: 'توثيق تصنيف المحتوى التعليمي على SharePoint حسب المجالات والمواد الدراسية لتسهيل الوصول إليه.', retired: true },
-      { id: 'permissions', label: 'مشاركة المحتوى وإدارة صلاحيات الوصول', description: 'توثيق مشاركة المحتوى التعليمي عبر SharePoint وإدارة صلاحيات الوصول إليه بحسب الفئات المستفيدة.' },
-    ],
-  },
-  {
     id: 'teams-classes',
     name: 'الفصول الافتراضية Microsoft Teams',
     summary: 'توثيق إنشاء الفصول الافتراضية وتنفيذ الحصص عن بُعد عبر Microsoft Teams.',

@@ -13,12 +13,20 @@ export function applyProfileV23(ini: Partial<InitiativeProfile>) {
   ini.expectedOutputs = add(ini.expectedOutputs, OUTPUT_12)
 }
 
+// الإصدار 24: حذف برنامج «إدارة المحتوى التعليمي SharePoint» من الموقع كله بطلب مديرة النظام (2026-11-13)
+const SP_PRACTICE = 'تنظيم المحتوى التعليمي وإدارته باستخدام SharePoint.'
+const SP_OUTPUT = 'إتاحة المحتوى التعليمي بصورة رقمية منظمة.'
+export function applyProfileV24(ini: Partial<InitiativeProfile>) {
+  const drop = (v: string | undefined, line: string) => (v ? v.split('\n').filter((l) => l.trim() !== line).join('\n') : v)
+  ini.targetPractices = drop(ini.targetPractices, SP_PRACTICE)
+  ini.expectedOutputs = drop(ini.expectedOutputs, SP_OUTPUT)
+}
+
 export const targetPracticesV22 = [
   'تدريب الطالبات على استخدام Microsoft Teams.',
   'تفعيل دفتر الملاحظات الرقمي OneNote واستخدامه في تنظيم ملفات الإنجاز.',
   'تدريب الطالبات على التخزين السحابي باستخدام OneDrive.',
   'توظيف Microsoft Forms في الاختبارات والتقويم الإلكتروني.',
-  'تنظيم المحتوى التعليمي وإدارته باستخدام SharePoint.',
   'تنفيذ الحصص الافتراضية عبر Microsoft Teams.',
   'توظيف Word Online في إنشاء المستندات وتحريرها ومشاركتها.',
   'استخدام PowerPoint Online في إعداد العروض التقديمية وبثها عبر الإنترنت.',
@@ -33,7 +41,6 @@ export const expectedOutputsV22 = [
   'اكتساب الطالبات مهارات تنظيم ملفات الإنجاز إلكترونيًا.',
   'تنمية مهارات التخزين السحابي وإدارة الملفات.',
   'التعرف على أدوات التقويم الإلكتروني وتوظيفها.',
-  'إتاحة المحتوى التعليمي بصورة رقمية منظمة.',
   'تمكين الطالبات من المشاركة في الحصص الافتراضية.',
   'تنمية مهارات الكتابة الرقمية والعمل التشاركي.',
   'تطوير مهارات إعداد العروض التقديمية ومشاركتها.',
