@@ -8578,3 +8578,47 @@ html[data-access='read'] .drawer-body :is(input, select, textarea, button) {
 .pm-caveat {
   margin: 0 0 var(--s-l);
 }
+/* المرفقات الداعمة لقياس الأثر */
+.if-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-m);
+}
+.if-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-s) var(--s-m);
+  padding: var(--s-l);
+  background: var(--bg1);
+  border-radius: var(--radius-l);
+  box-shadow: var(--ring);
+}
+.if-desc {
+  margin: 0;
+  grid-column: 1;
+}
+.if-item .attachments {
+  grid-column: 1;
+}
+.if-tools {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+}
+.if-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--s-s);
+  padding: var(--s-m);
+  border: 1px dashed var(--stroke1);
+  border-radius: var(--radius-m);
+}
+.if-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

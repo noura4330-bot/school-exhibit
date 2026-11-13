@@ -277,6 +277,12 @@ export interface ProgramMeasure extends BaseRecord {
   notes: string
 }
 
+/** مرفق داعم لقياس الأثر: ملف واحد ووصفه، مستقل عن الشواهد */
+export interface ImpactFile extends BaseRecord {
+  description: string
+  files: Attachment[]
+}
+
 export type IndicatorStatus =
   | 'not_reviewed'
   | 'not_started'
@@ -378,6 +384,7 @@ export interface AppData {
   tasks: Task[]
   govDocs: GovernanceDoc[]
   programMeasures: ProgramMeasure[]
+  impactFiles: ImpactFile[]
 }
 
 export type CollectionKey =
@@ -394,3 +401,4 @@ export type CollectionKey =
   | 'tasks'
   | 'govDocs'
   | 'programMeasures'
+  | 'impactFiles'

@@ -279,6 +279,7 @@ export function createSeed(): AppData {
     },
     impact: [],
     programMeasures: [],
+    impactFiles: [],
     tasks: [...tasks, ...followUpTaskRecords(base)],
     govDocs: [],
   })))))

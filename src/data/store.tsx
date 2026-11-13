@@ -108,6 +108,7 @@ export function normalizeData(raw: unknown): AppData {
     // الإصدار 10: وثائق الحوكمة الموحدة (تُنشأ أدناه إن لم توجد)
     govDocs: Array.isArray(r.govDocs) ? r.govDocs : [],
     // الإصدار 18: مؤشرات أثر البرامج المعتمدة من مديرة النظام، مرة واحدة فقط
+    impactFiles: arr<AppData['impactFiles'][number]>(r.impactFiles, []).map((f) => ({ ...f, files: Array.isArray(f.files) ? f.files : [] })),
     programMeasures: (() => {
       const v = r.version ?? 1
       const list = v < 18 ? applyMeasuresV18(arr(r.programMeasures, []), base) : arr(r.programMeasures, [])

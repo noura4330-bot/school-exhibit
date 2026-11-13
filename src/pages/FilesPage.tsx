@@ -68,6 +68,20 @@ function buildIndex(data: AppData): Entry[] {
       completeness: Math.round((filled / 5) * 100),
     })
   }
+  for (const x of data.impactFiles ?? [])
+    x.files.forEach((f) =>
+      out.push({
+        key: `if-${f.id}`,
+        title: f.name,
+        owner: `مرفق قياس الأثر: ${x.description}`,
+        route: 'impact',
+        category: 'report',
+        date: x.createdAt.slice(0, 10),
+        linked: ['قياس الأثر'],
+        file: f,
+        completeness: 100,
+      }),
+    )
   for (const w of data.workshops) {
     const groups: [Attachment[], string][] = [
       [w.presentation, 'ملف العرض'],

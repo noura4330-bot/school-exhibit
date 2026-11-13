@@ -5,6 +5,7 @@ import { impactExamples } from '../data/seed'
 import { evidenceFor, practiceDoc } from '../data/selectors'
 import { Badge, EmptyState, Message, PageHeader, Section, Value } from '../components/ui'
 import { useCrud, type EditorConfig } from '../components/records'
+import { ImpactFiles } from '../components/ImpactFiles'
 import { ProgramMeasures } from '../components/ProgramMeasures'
 import type { FieldDef } from '../components/form'
 import { formatDate, formatNumber, todayIso, toNumber } from '../lib/util'
@@ -138,6 +139,8 @@ export default function ImpactPage() {
     <>
       <PageHeader title="قياس الأثر" lead="مؤشرات قياس أثر كل برنامج من برامج الشواهد: المستهدف والنتيجة الفعلية ووصف مختصر للنتيجة." />
       <ProgramMeasures />
+
+      <ImpactFiles />
 
       {/* مؤشرات الأثر العامة السابقة: خارج نطاق شواهد البرامج، فتبقى بياناتها مطوية لمديرة النظام فقط (2026-11-12) */}
       <details className="legacy-impact edit-only">
