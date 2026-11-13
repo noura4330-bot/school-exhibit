@@ -27,8 +27,9 @@ const isImage = (a: Attachment) => a.type.startsWith('image/')
 export const imagesOf = (e: Evidence) => e.files.filter(isImage)
 const isVideo = (a: Attachment) => a.type.startsWith('video/')
 export const videosOf = (e: Evidence) => e.files.filter(isVideo)
-/** البرامج التي تقبل شواهدها مقاطع فيديو مع الصور (طلب مديرة النظام 2026-11-13) */
-const VIDEO_PROGRAMS = ['digital-awareness']
+/** البرامج التي تقبل شواهدها مقاطع فيديو مع الصور. فارغة: الشواهد صور فقط بطلب مديرة النظام (2026-11-13)،
+ * ويبقى أي مقطع أُضيف سابقًا محفوظًا ويُعرض مع شاهده */
+const VIDEO_PROGRAMS: string[] = []
 const MAX_VIDEOS = 1
 
 /** رابط تشغيل لملف فيديو محفوظ */
@@ -211,7 +212,7 @@ export function ProgramEvidenceEditor({ initial, isNew, onClose }: { initial: Ev
     const errs: typeof errors = {}
     if (!program) errs.program = 'اختاري البرنامج.'
     if (!kind) errs.kind = 'اختاري نوع الشاهد.'
-    const keptVideos = allowsVideo ? videos : []
+    const keptVideos = allowsVideo ? videos : videosOf(initial)
     if (images.length < MIN_IMAGES && !(allowsVideo && keptVideos.length)) errs.images = allowsVideo ? 'ارفعي صورة أو مقطع فيديو واحدًا على الأقل.' : 'ارفعي صورة واحدة على الأقل للشاهد.'
     else if (images.length > MAX_IMAGES) errs.images = `الحد الأعلى ${MAX_IMAGES} صورة للشاهد (المرفوع الآن ${images.length}).`
     if (needsTeacher && !teacher.trim()) errs.teacher = 'اكتبي اسم المعلمة.'
