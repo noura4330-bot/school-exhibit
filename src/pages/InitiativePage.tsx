@@ -3,7 +3,8 @@ import { EditRegular } from '@fluentui/react-icons'
 import { useStore } from '../data/store'
 import type { Activity, InitiativeProfile } from '../data/types'
 import { activityStatuses, initiativeStatuses } from '../data/options'
-import { StatusBadge, Value } from '../components/ui'
+import { Badge, StatusBadge, Value } from '../components/ui'
+import { activityAuto } from '../data/activityAuto'
 import { parseStages, SecHead, stageProgress, type Stage } from '../components/InitiativeSections'
 import { Drawer, useFeedback } from '../components/feedback'
 import { FormFields, validateFields, type Errors, type FieldDef } from '../components/form'
@@ -125,30 +126,54 @@ const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behav
 /** تبويب «خطة التنفيذ»: كل مرحلة في بطاقة، مع حالتها وأنشطتها، ثم الموارد */
 function PlanTab({ ini, stages, intro }: { ini: InitiativeProfile; stages: Stage[]; intro: string | null }) {
   const { data } = useStore()
-  const documented = (a: Activity) => evidenceFor(data, { kind: 'activity', id: a.id }).length > 0
+  // منفذ وموثق: تلقائيًا من البيانات المسجلة متى وُجد مصدر مطابق، وإلا من الحالة المسجلة والشاهد المرتبط
+  const auto = (a: Activity) => activityAuto(data, a)
+  const documented = (a: Activity) => {
+    const x = auto(a)
+    return x ? x.count > 0 : evidenceFor(data, { kind: 'activity', id: a.id }).length > 0
+  }
+  const status = (a: Activity) => {
+    const x = auto(a)
+    if (!x) return { ...a }
+    return { ...a, status: (x.count > 0 ? 'implemented' : a.status === 'cancelled' ? 'cancelled' : 'planned') as Activity['status'] }
+  }
   return (
     <>
       {intro && <p className="ipf-lead">{intro}</p>}
       {stages.length ? (
         <div className="ipf-blocks">
           {stages.map((st, i) => {
-            const pg = stageProgress(st.activities, documented)
+            const pg = stageProgress(st.activities.map(status), documented)
             return (
               <Block key={i} n={String(i + 1).padStart(2, '0')} title={st.title}>
                 {st.desc && <p>{st.desc}</p>}
                 {st.activities.length > 0 && (
                   <ul className="ipf-acts">
-                    {st.activities.map((a) => (
-                      <li key={a.id}>
-                        <span>{a.title}</span>
-                        <StatusBadge options={activityStatuses} value={a.status} />
-                      </li>
-                    ))}
+                    {st.activities.map((a) => {
+                      const x = auto(a)
+                      return (
+                        <li key={a.id}>
+                          <span>
+                            {a.title}
+                            {x && (
+                              <span className="ipf-act-src">
+                                {x.source}: {x.count}
+                              </span>
+                            )}
+                          </span>
+                          {x ? (
+                            x.count > 0 ? <Badge tone="success">منفذ وموثق</Badge> : <Badge>لم يُوثق بعد</Badge>
+                          ) : (
+                            <StatusBadge options={activityStatuses} value={a.status} />
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
                 {pg.total > 0 && (
                   <p className="caption">
-                    أنشطة منفذة وموثقة: {pg.done} من {pg.total}
+                    أنشطة منفذة وموثقة (تُحسب تلقائيًا): {pg.done} من {pg.total}
                   </p>
                 )}
               </Block>
